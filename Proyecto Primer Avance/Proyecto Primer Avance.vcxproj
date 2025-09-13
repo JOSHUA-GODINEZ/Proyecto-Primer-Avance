@@ -128,16 +128,6 @@
   <ItemGroup>
     <ClCompile Include="Proyecto Primer Avance.cpp" />
   </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="resource.h" />
-    <ClInclude Include="resource1.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <ResourceCompile Include="Proyecto Primer Avance.rc" />
-  </ItemGroup>
-  <ItemGroup>
-    <Image Include="..\..\practica\Sprites\imagen_80x50.png" />
-  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
