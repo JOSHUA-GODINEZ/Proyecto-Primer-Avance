@@ -557,7 +557,7 @@ public:
 // 
 // Encapsula la ventana SFML, la UI (menú, game over), el bucle principal,
 // la sincronización de la limpieza (clock + delay) y el enrutado de eventos.
-class Game {
+
 private:
     sf::RenderWindow window; // ventana principal
     sf::Font fuente;         // fuente para los textos
