@@ -42,14 +42,7 @@ public:
     void resetVisual() { sprite.setScale(1.f, 1.f); }
 };
 
-// Esta clase guarda el estado del tablero (8x8), las texturas,
-// el puntaje, los movimientos y toda la lógica del juego:
-// - detectar combinaciones
-// - eliminar gemas
-// - aplicar gravedad
-// - rellenar gemas nuevas
-// - seleccionar e intercambiar gemas
-//
+// Esta clase guarda el estado del tablero (8x8) y las acciones de las gemas
 class Board {
 private:
     Gem* matriz[8][8];   
