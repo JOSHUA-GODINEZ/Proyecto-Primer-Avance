@@ -9,14 +9,9 @@ private:
     int tipo;          
 
 public:
-    Gem() {
-   
-    }
     // Constructor:
-    // Recibe una textura, la posición top-left de la celda donde
-    // debe ir la gema y el tipo (un entero).
     // Ajusta el origen al centro para que las escalas y movimientos
-    // se vean centrados, y coloca el sprite centrado en la celda.
+  
     Gem(sf::Texture& textura, sf::Vector2f posicionTopLeft, int tipoGem) {
         sprite.setTexture(textura);
         // origen en el centro para que el escalado mantenga centrado el sprite
@@ -57,55 +52,40 @@ public:
 //
 class Board {
 private:
-    Gem* matriz[8][8];    // matriz de punteros a Gem (cada celda puede ser nullptr)
-    sf::Texture texturas[5]; // texturas para 5 tipos de gemas
-    int movimientosRestantes = 3;
-    int puntaje = 0;
+    Gem* matriz[8][8];   
+    sf::Texture texturas[5];
+    int movimientosRestantes = 3, puntaje = 0;
+    
+    // Parar el tiempo cuando limpia el tablero
+    bool cleaningInProgress = false;        
+    bool contarPuntajeEnCleaning = true;    
+    // Acciones de Gem
+    bool marked[8][8]; 
+    bool removalPending = false; 
+    const float MARK_SCALE = 1.35f;  
+    const float SELECT_SCALE = 1.35f; 
 
-    // limpieza paso a paso (para animaciones/marcado)
-    bool cleaningInProgress = false;         // true cuando hay proceso de limpieza en curso
-    bool contarPuntajeEnCleaning = true;    // indica si hay que sumar puntaje durante la limpieza
-
-    bool marked[8][8]; // marcas usadas en la fase "two-phase" (marcar -> eliminar)
-    bool removalPending = false; // true entre la fase de marcar y la fase de eliminación real
-    const float MARK_SCALE = 1.35f;   // escala visual al marcar (aumenta)
-    const float SELECT_SCALE = 1.35f; // escala visual al seleccionar
-
-    int selectedRow = -1; // fila seleccionada por el jugador (-1 si ninguna)
-    int selectedCol = -1; // columna seleccionada por el jugador (-1 si ninguna)
+    int selectedRow = -1; 
+    int selectedCol = -1; 
 
     // coordenadas fijas para usar como sistema lógico de referencia
-    // originX/originY son el top-left lógico del tablero en la ventana
+   
     const float originX = 117.f;
     const float originY = 100.f;
     const float cellW = 69.f; // ancho de celda
     const float cellH = 60.f; // alto de celda
 
-    // ---------------- internas ----------------
-
-    // detectarCombinacionesSinEliminar:
-    // Recorre la matriz en busca de secuencias (horizontales o verticales)
-    // de >= 3 gemas del mismo tipo. NO elimina nada; solo devuelve true/false.
-    // Se usa para comprobar si un swap produciría un combo o para detección rápida.
-
-
 public:
-    // Constructor de Board:
+   
     // Inicializa variables, carga texturas, crea la matriz con gemas aleatorias
     // y limpia combos iniciales (sin puntuar) hasta que el tablero quede estable.
     Board() {
-
-        std::srand(time(nullptr));
-        // std::memset(marked, 0, sizeof(marked));
-
-         // cargar texturas (ajusta rutas si hace falta)
-        if (!texturas[0].loadFromFile("C:/Joshua/practica/Sprites/imagen_80x50.png")) std::cout << "Error textura 0\n";
-        if (!texturas[1].loadFromFile("C:/Joshua/practica/Sprites/orange_80x50.png")) std::cout << "Error textura 1\n";
-        if (!texturas[2].loadFromFile("C:/Joshua/practica/Sprites/assets_task_01k242ywmqejmrtpc1fanwmbef_1754631571_img_1.png")) std::cout << "Error textura 2\n";
-        if (!texturas[3].loadFromFile("C:/Joshua/practica/Sprites/assets_task_01k2433kxffdws9dppcbqme0ev_1754631736_img_1.png")) std::cout << "Error textura 3\n";
-        if (!texturas[4].loadFromFile("C:/Joshua/practica/Sprites/assets_task_01k242rgp9fs3scwggxmte3ds5_1754631366_img_1.png")) std::cout << "Error textura 4\n";
-
-        // crear matriz (posiciones fijas como en tu primer código)
+        srand(time(nullptr));
+       texturas[0].loadFromFile("C:/Joshua/practica/Sprites/imagen_80x50.png");
+       texturas[1].loadFromFile("C:/Joshua/practica/Sprites/orange_80x50.png");
+       texturas[2].loadFromFile("C:/Joshua/practica/Sprites/assets_task_01k242ywmqejmrtpc1fanwmbef_1754631571_img_1.png");
+       texturas[3].loadFromFile("C:/Joshua/practica/Sprites/assets_task_01k2433kxffdws9dppcbqme0ev_1754631736_img_1.png");
+       texturas[4].loadFromFile("C:/Joshua/practica/Sprites/assets_task_01k242rgp9fs3scwggxmte3ds5_1754631366_img_1.png");
         // Cada celda recibe una Gem nueva con textura aleatoria.
         for (int i = 0; i < 8; ++i) {
             for (int j = 0; j < 8; ++j) {
@@ -113,8 +93,6 @@ public:
                 matriz[i][j] = new Gem(texturas[tipo], sf::Vector2f(j * cellW + originX, i * cellH + originY), tipo);
             }
         }
-
-        // Limpiar combos iniciales sin puntuar (como antes)
         // Esto evita que el tablero empiece con combinaciones ya resueltas.
         bool sigue = true;
         while (sigue) {
@@ -131,22 +109,20 @@ public:
         for (int i = 0; i < 8; ++i) {
             int contador = 1;
             for (int j = 1; j < 8; ++j) {
-                if (//matriz[i][j] != nullptr && matriz[i][j - 1] != nullptr && compara si no esta vacio (no parase ser necesario)
-                    (*matriz[i][j]).getTipo() == (*matriz[i][j - 1]).getTipo()) {
+                if (matriz[i][j] != nullptr && matriz[i][j - 1] != nullptr && (*matriz[i][j]).getTipo() == (*matriz[i][j - 1]).getTipo()) {
                     ++contador;
                     if (contador >= 3) return true; // si encontramos 3 iguales seguidos, hay combo
                 }
                 else {
-                    contador = 1; // reinicia conteo cuando cambia el tipo
+                    contador = 1; 
                 }
             }
         }
-        // verticales (mismo procedimiento, pero por columnas)
+        // verticales
         for (int j = 0; j < 8; ++j) {
             int contador = 1;
             for (int i = 1; i < 8; ++i) {
-                if (//matriz[i][j] != nullptr && matriz[i - 1][j] != nullptr && lo mismi de arriba
-                    (*matriz[i][j]).getTipo() == (*matriz[i - 1][j]).getTipo()) {
+                if (matriz[i][j] != nullptr && matriz[i - 1][j] != nullptr && (*matriz[i][j]).getTipo() == (*matriz[i - 1][j]).getTipo()) {
                     ++contador;
                     if (contador >= 3) return true;
                 }
@@ -155,26 +131,17 @@ public:
                 }
             }
         }
-        return false; // no se encontró ninguna secuencia >=3
+        return false; // no se encontró ninguna secuencia
     }
-
-    // formaCombinacionAlIntercambiar:
-    // Simula el intercambio de dos celdas (intercambia punteros), llama a
-    // detectarCombinacionesSinEliminar() y luego deshace el swap.
-    // Devuelve true si el intercambio generaría un combo.
+// Solo detecta si hay combo(no intercambia)
     bool formaCombinacionAlIntercambiar(int f1, int c1, int f2, int c2) {
-        // intercambio manual de punteros (equivalente a std::swap)
         Gem* temp = matriz[f1][c1];
         matriz[f1][c1] = matriz[f2][c2];
         matriz[f2][c2] = temp;
-
         bool hayCombo = detectarCombinacionesSinEliminar();
-
-        // volver a ponerlos como estaban (deshacer intercambio)
         temp = matriz[f1][c1];
         matriz[f1][c1] = matriz[f2][c2];
         matriz[f2][c2] = temp;
-
         return hayCombo;
     }
 
@@ -325,13 +292,10 @@ public:
             return huboEliminacion; // indica si se eliminó al menos una gema
         }
     }
-
-    // aplicarGravedadYReemplazar:
-    // Hace que las gemas "caigan" hacia abajo (simulando gravedad) y rellena
-    // con gemas nuevas arriba cuando hay celdas vacías.
+    // Hace que las gemas "caigan"  y rellenacon gemas nuevas arriba cuando hay celdas vacías.
     void aplicarGravedadYReemplazar() {
         for (int col = 0; col < 8; ++col) {
-            // caer: recorrer de abajo hacia arriba y traer la gema más arriba si hay hueco
+          // Aplica gravedad
             for (int fila = 7; fila >= 0; --fila) {
                 if (matriz[fila][col] == nullptr) {
                     int k = fila - 1;
@@ -340,13 +304,12 @@ public:
                         // mover el puntero a la posición inferior
                         matriz[fila][col] = matriz[k][col];
                         matriz[k][col] = nullptr;
-                        // actualizar posición visual de la gema movida
                         (*matriz[fila][col]).setPosition(col * cellW + originX, fila * cellH + originY);
                         (*matriz[fila][col]).resetVisual();
                     }
                 }
             }
-            // rellenar: crear nuevas gemas para celdas vacías (arriba)
+            // rellena espacios vacios
             for (int fila = 0; fila < 8; ++fila) {
                 if (matriz[fila][col] == nullptr) {
                     int tipo = std::rand() % 5;
@@ -362,7 +325,7 @@ public:
                 if (matriz[i][j] != nullptr) delete matriz[i][j];
     }
 
-    // Dibuja todas las gemas en pantalla (si la celda no es nullptr).
+    // Dibuja todas las gemas en pantalla.
     void draw(sf::RenderWindow& window) {
         for (int i = 0; i < 8; ++i)
             for (int j = 0; j < 8; ++j)
@@ -388,8 +351,7 @@ public:
         // validar si el swap produce combo
         if (!formaCombinacionAlIntercambiar(f1, c1, f2, c2)) return false;
 
-        // swap punteros (real)
-       // std::swap(matriz[f1][c1], matriz[f2][c2]);
+       
         Gem* temp = matriz[f1][c1];
         matriz[f1][c1] = matriz[f2][c2];
         matriz[f2][c2] = temp;
@@ -397,8 +359,8 @@ public:
         if (matriz[f1][c1] != nullptr) (*matriz[f1][c1]).setPosition(c1 * cellW + originX, f1 * cellH + originY);
         if (matriz[f2][c2] != nullptr) (*matriz[f2][c2]).setPosition(c2 * cellW + originX, f2 * cellH + originY);
 
-        --movimientosRestantes; // consumir un movimiento
-        startCleaning(true);    // iniciar limpieza en modo que cuenta puntaje
+        --movimientosRestantes;
+        startCleaning(true);    
         return true;
     }
 
@@ -477,10 +439,7 @@ public:
         return;
 
     }
-
-
-    // utilidad para convertir pixel->celda usando coordenadas lógicas (mismo sistema que usó tu código original)
-    // Se utiliza para convertir la posición del ratón en índices de fila/columna.
+    // Se utiliza para convertir la posición del ratón en índices de fila/columna (SMFL).
     pair <int, int> screenToCell(sf::RenderWindow& win, int mouseX, int mouseY) {
         sf::Vector2f world = win.mapPixelToCoords(sf::Vector2i(mouseX, mouseY));
         int col = int(std::floor((world.x - originX) / cellW));
@@ -488,7 +447,7 @@ public:
         return { row, col };
     }
 
-    // rect del tablero en coordenadas lógicas para el fondo del tablero
+    // Elimina el tablero y crea otro como en el constructor
     void resetBoard(int newMoves = 20) {
         movimientosRestantes = newMoves;
         puntaje = 0;
@@ -496,7 +455,7 @@ public:
         contarPuntajeEnCleaning = true;
         removalPending = false;
         selectedRow = -1; selectedCol = -1;
-        //  std::memset(marked, 0, sizeof(marked));
+      
 
            // borrar gemas actuales (liberar memoria)
         for (int i = 0; i < 8; ++i) {
@@ -516,7 +475,7 @@ public:
             }
         }
 
-        // Limpiar combos iniciales sin puntuar (como en el constructor)
+      
         bool sigue = true;
         while (sigue) {
             if (limpiarCombosUnaVez(false)) {
@@ -527,32 +486,25 @@ public:
             }
         }
     }
-
-    // ----------------- NUEVO: reset completo del tablero (para reiniciar partidas) -----------------
-    // Resetea puntuación, movimientos, borra gemas actuales y genera un nuevo tablero aleatorio.
-
 };
 
-// 
-// ----- Clase Game -----
-// 
-// Encapsula la ventana SFML, la UI (menú, game over), el bucle principal,
-// la sincronización de la limpieza (clock + delay) y el enrutado de eventos.
-class Game{
-private:
-    sf::RenderWindow window; // ventana principal
-    sf::Font fuente;         // fuente para los textos
-    sf::Text textoPuntaje;   // texto que muestra puntaje
-    sf::Text textoMovimientos; // texto que muestra movimientos restantes
-    Board tablero;           // el tablero del juego (composición)
 
-    sf::Texture fondoTexture;   // fondo detrás del tablero (ajustable)
+class Game {
+private:
+    sf::RenderWindow window{sf::VideoMode(800, 600), "Match-3 (Game)"};
+    sf::Font fuente;         
+    sf::Text textoPuntaje;  
+    sf::Text textoMovimientos;
+    Board tablero;          
+
+    sf::Texture fondoTexture;  
     sf::Sprite fondoSprite;
-    sf::Texture fondoTexture1;  // fondo general (detrás de todo)
+    sf::Texture fondoTexture1;  
     sf::Sprite fondoSprite1;
 
-    sf::Clock cleaningClock; // reloj usado para espaciar pasos de limpieza
-    sf::Time cleaningDelay;  // delay entre pasos (para ver la animación)
+    // delay entre pasos
+    sf::Clock cleaningClock; 
+    sf::Time cleaningDelay = (sf::milliseconds(900));
 
     // MENU UI
     sf::RectangleShape menuButton;
@@ -568,16 +520,12 @@ private:
 
     // Estado del juego: MENU, PLAYING o GAME_OVER
     enum class GameState { MENU, PLAYING, GAME_OVER };
-    GameState state;
+    GameState state = GameState::MENU;
 
 public:
-    // Constructor de Game: configura la ventana, carga recursos y prepara UI
-    Game()
-        : window(sf::VideoMode(800, 600), "Match-3 (Game)"),
-        tablero(),
-        cleaningDelay(sf::milliseconds(900)),
-        state(GameState::MENU)
-    {
+  
+    Game(){
+     
         // fijamos la vista lógica en 800x600 (igual que tu diseño original)
         sf::View view(sf::FloatRect(0.f, 0.f, 800.f, 600.f));
         window.setView(view);
@@ -683,16 +631,7 @@ public:
         window.setFramerateLimit(60);
     }
 
-    // run: bucle principal del juego (eventos -> update -> render)
 
-    void run() {
-        while (window.isOpen()) {
-            processEvents();
-            update();
-            render();
-
-        }
-    }
 
     // processEvents: recoge eventos SFML y actúa según el estado actual del juego
     void processEvents() {
@@ -721,11 +660,9 @@ public:
                         state = GameState::PLAYING;
                     }
                 }
-
-
             }
             else if (state == GameState::PLAYING) {
-                // ignorar clics si está limpiando (para no interferir con la animación)
+                // ignorar clics si está limpiando.
                 if (tablero.isCleaning()) continue;
 
                 if (evento.type == sf::Event::MouseButtonPressed && evento.mouseButton.button == sf::Mouse::Left) {
@@ -742,7 +679,6 @@ public:
                     int col = rc.second;
 
                     if (fila >= 0 && fila < 8 && col >= 0 && col < 8) {
-                        // delegar selección / intento de swap al tablero
                         tablero.selectOrSwap(fila, col);
                     }
                 }
@@ -835,19 +771,25 @@ public:
             finalScore.setCharacterSize(28);
             finalScore.setString("Puntaje final: " + to_string(tablero.getPuntaje()));
             finalScore.setFillColor(sf::Color::Black);
-            //sf::FloatRect fsb = finalScore.getLocalBounds();
-           // finalScore.setOrigin(fsb.width / 2.f, fsb.height / 2.f);
+           
             finalScore.setPosition(300.f, 200.f);
             window.draw(finalScore);
         }
 
-        // mostrar todo en pantalla
+   
         window.display();
     }
-};
+    // run: bucle principal del juego (eventos -> update -> render)
+    void run() {
+        while (window.isOpen()) {
+            processEvents();
+            update();
+            render();
 
+        }
+    }
+};
 int main() {
-    // punto de entrada: crear instancia del juego y ejecutarlo
     Game game;
     game.run();
 }
