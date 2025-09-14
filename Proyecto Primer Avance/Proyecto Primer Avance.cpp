@@ -145,16 +145,15 @@ public:
         return hayCombo;
     }
 
-    // limpiarCombosUnaVez:
-    // Esta función detecta combos y los elimina (o marca para eliminación).
-    // - Si contarPuntaje == false: modo "inicialización" -> detecta y elimina
-    //   inmediatamente (no suma puntaje ni marca visualmente).
-    // - Si contarPuntaje == true: modo "juego" -> trabaja en dos fases:
+    // Esta función detecta combos y los  marca y elimina.
+    // Dos modos el primero antes de empezar(no cuenta puntaje)
+    // El segundo cuando se esta jugando (si cuenta pumtaje)
     //     * Si removalPending == false: marca las gemas (cambia su escala) y pone removalPending=true
     //     * Si removalPending == true: elimina las gemas marcadas, suma puntaje, resetea marcas.
     bool limpiarCombosUnaVez(bool contarPuntaje) {
         if (!contarPuntaje) {
-            // MODO INICIALIZACIÓN: eliminaciones inmediatas sin animación ni puntaje.
+              // Modo Inicializacion (contarpuntaje == false)
+
             bool huboEliminacion = false;
             bool marcadasLocal[8][8] = { false };
 
@@ -165,15 +164,15 @@ public:
                     if (matriz[i][j] == nullptr) { ++j; continue; } // salta celdas vacías
                     int tipo = (*matriz[i][j]).getTipo();
                     int k = j + 1;
-                    // avanza k mientras las gemas sean del mismo tipo
+                   
                     while (k < 8 && matriz[i][k] != nullptr && (*matriz[i][k]).getTipo() == tipo) ++k;
                     int runLen = k - j;
                     if (runLen >= 3) {
-                        // marca local las celdas que forman el run
+               
                         for (int t = j; t < k; ++t) marcadasLocal[i][t] = true;
                         huboEliminacion = true;
                     }
-                    j = k; // continuar después del tramo
+                    j = k; 
                 }
             }
 
@@ -199,8 +198,8 @@ public:
                 for (int i = 0; i < 8; ++i) {
                     for (int j = 0; j < 8; ++j) {
                         if (marcadasLocal[i][j] && matriz[i][j] != nullptr) {
-                            delete matriz[i][j];      // liberar memoria del objeto Gem
-                            matriz[i][j] = nullptr;  // dejar la celda vacía
+                            delete matriz[i][j];     
+                            matriz[i][j] = nullptr; 
                         }
                     }
                 }
@@ -210,9 +209,9 @@ public:
         }
 
         // MODO JUEGO (contarPuntaje == true)
-        // Aquí se hace en dos fases para permitir una animación: marcar -> eliminar.
+       
         if (!removalPending) {
-            // Primera sub-fase: detectar y marcar
+         //detectar y marcar
             bool huboEliminacion = false;
             bool marcadasLocal[8][8] = { false };
 
@@ -249,9 +248,6 @@ public:
                     i = k;
                 }
             }
-
-            // si encontramos combos, copiamos marcadasLocal a marked (miembro)
-            // y escalamos visualmente esas gemas para indicar que serán eliminadas
             if (huboEliminacion) {
                 for (int i = 0; i < 8; ++i) {
                     for (int j = 0; j < 8; ++j) {
@@ -261,13 +257,13 @@ public:
                         }
                     }
                 }
-                removalPending = true; // pasamos a la fase pendiente (a borrar en la siguiente llamada)
-                return true; // indicamos que hubo trabajo (pero aún no se borró)
+                removalPending = true; 
+                return true; // indica que hubo trabajo (pero aún no se borró)
             }
-            return false; // no hubo combos
+            return false;
         }
         else {
-            // Segunda sub-fase: eliminar las marcadas y sumar puntaje
+       // eliminar las marcadas y sumar puntaje
             bool huboEliminacion = false;
             for (int i = 0; i < 8; ++i) {
                 for (int j = 0; j < 8; ++j) {
@@ -292,6 +288,7 @@ public:
             return huboEliminacion; // indica si se eliminó al menos una gema
         }
     }
+
     // Hace que las gemas "caigan"  y rellenacon gemas nuevas arriba cuando hay celdas vacías.
     void aplicarGravedadYReemplazar() {
         for (int col = 0; col < 8; ++col) {
@@ -333,17 +330,14 @@ public:
                     (*matriz[i][j]).draw(window);
     }
 
-    // intercambiar:
-    // Intenta intercambiar dos celdas adyacentes. Valida índices y adyacencia,
-    // comprueba que el intercambio produciría una combinación (formaCombinacionAlIntercambiar)
-    // y si es válido hace el swap, actualiza posición visual, decrementa movimientos
-    // e inicia el proceso de limpieza (startCleaning).
+    // Intenta intercambiar dos celdas adyacentes si se forma una combinacion.
+   // inicia el proceso de limpieza (startCleaning).
     bool intercambiar(int f1, int c1, int f2, int c2) {
-        // validación de límites
+      
         if (f1 < 0 || f1 >= 8 || c1 < 0 || c1 >= 8 ||
             f2 < 0 || f2 >= 8 || c2 < 0 || c2 >= 8) return false;
 
-        // comprobar adyacencia (solo se permiten swaps ortogonales)
+        // comprobar adyacencia.
         int df = f1 - f2; if (df < 0) df *= -1;
         int dc = c1 - c2; if (dc < 0) dc *= -1;
         if (!((df == 1 && dc == 0) || (df == 0 && dc == 1))) return false;
@@ -364,23 +358,22 @@ public:
         return true;
     }
 
-    // startCleaning:
+
     // Marca que el tablero entra en modo "limpieza" y define si debe
     // contarse puntaje durante la limpieza.
     void startCleaning(bool contarP) {
         cleaningInProgress = true;
-        // contarPuntajeEnCleaning = contarP;
+       
     }
 
-    // stepCleaning:
+  
     // Ejecuta un paso de la limpieza (se llama repetidamente con delay
-    // para controlar animaciones). Devuelve true si realizó trabajo.
     bool stepCleaning() {
         if (!cleaningInProgress) return false;
         bool hubo = limpiarCombosUnaVez(contarPuntajeEnCleaning);
         if (hubo) {
             if (removalPending) {
-                return true; // marcamos, falta eliminación real (two-phase)
+                return true;
             }
             else {
                 aplicarGravedadYReemplazar();
@@ -393,11 +386,11 @@ public:
         }
     }
 
-    // isCleaning: consulta si hay limpieza en curso.
+    // consulta si hay limpieza en curso.
     bool isCleaning() const { return cleaningInProgress; }
 
-    // limpiarCombosRepetidamente:
-    // Versión cómoda para ejecutar limpieza completa hasta que no queden combos.
+   
+    //  ejecuta limpieza completa hasta que no queden combos.
     void limpiarCombosRepetidamente(bool contarPuntaje = true) {
         bool sigue = true;
         while (sigue) {
@@ -415,30 +408,27 @@ public:
 
     void resetMovimientos(int n) { movimientosRestantes = n; }
 
-    // selección del jugador (igual que antes)
-    // Deselecciona la gema marcada actualmente (si existe) y restaura su aspecto.
 
-
-    // selectOrSwap:
     // Lógica de control de selección por clicks:
     // - primer click: selecciona la gema (la escala)
     // - segundo click:
     //    * si es la misma celda -> deselecciona
     //    * si es adyacente -> intenta intercambiar (y si es válido, procesa limpieza)
-    //    * si no es adyacente -> cambia la selección a la nueva celda
     void selectOrSwap(int fila, int col) {
         if (selectedRow == -1) {
-            // no había selección previa: guardamos esta
             selectedRow = fila; selectedCol = col;
             (*matriz[selectedRow][selectedCol]).setScale(SELECT_SCALE, SELECT_SCALE);
-            return;
+          
         }
-        bool ok = intercambiar(selectedRow, selectedCol, fila, col);
-        (*matriz[selectedRow][selectedCol]).resetVisual();
-        selectedRow = -1; selectedCol = -1;
-        return;
-
+        else {
+            bool ok = intercambiar(selectedRow, selectedCol, fila, col);
+            (*matriz[selectedRow][selectedCol]).resetVisual();
+            selectedRow = -1; selectedCol = -1;
+            
+        }
     }
+
+
     // Se utiliza para convertir la posición del ratón en índices de fila/columna (SMFL).
     pair <int, int> screenToCell(sf::RenderWindow& win, int mouseX, int mouseY) {
         sf::Vector2f world = win.mapPixelToCoords(sf::Vector2i(mouseX, mouseY));
@@ -491,7 +481,7 @@ public:
 
 class Game {
 private:
-    sf::RenderWindow window{sf::VideoMode(800, 600), "Match-3 (Game)"};
+    sf::RenderWindow window{sf::VideoMode(800, 600), "Match-3"};
     sf::Font fuente;         
     sf::Text textoPuntaje;  
     sf::Text textoMovimientos;
@@ -539,7 +529,7 @@ public:
             std::cout << "Error cargando fondo (Fondo5.png)\n";
         }
         else {
-            // posicionar fondo que queda justo detrás del tablero
+        
             fondoSprite.setTexture(fondoTexture);
             fondoSprite.setPosition(124.f, 110.f);
         }
@@ -550,7 +540,6 @@ public:
         else {
             fondoSprite1.setTexture(fondoTexture1);
             if (fondoTexture1.getSize().x != 0 && fondoTexture1.getSize().y != 0) {
-                // escalar el fondo general para que ocupe 800x600 lógicamente
                 fondoSprite1.setOrigin(0.f, 0.f);
                 fondoSprite1.setScale(800.f / (float)fondoTexture1.getSize().x, 600.f / (float)fondoTexture1.getSize().y);
             }
@@ -569,11 +558,8 @@ public:
 
         // MENU UI: botón central "JUGAR"
         menuButton.setSize(sf::Vector2f(200.f, 80.f));
-        //  menuButton.setOrigin(menuButton.getSize() / 2.f);
         menuButton.setPosition(300.f, 300.f);
         menuButton.setFillColor(sf::Color::Green);
-        //  menuButton.setOutlineThickness(5.f);
-          //menuButton.setOutlineColor(sf::Color::Black);
 
         menuButtonText.setFont(fuente);
         menuButtonText.setCharacterSize(32);
@@ -599,10 +585,7 @@ public:
         retryButtonText.setCharacterSize(28);
         retryButtonText.setString("Reintentar");
         retryButtonText.setFillColor(sf::Color::Black);
-        // sf::FloatRect tbound = retryButtonText.getLocalBounds();
-         //retryButtonText.setOrigin(tbound.left + tbound.width / 2.f, tbound.top + tbound.height / 2.f);
-        retryButtonText.setPosition(retryButton.getPosition().x - 65, retryButton.getPosition().y - 25 + 6.f); // botón y texto comparten el mismo ce
-
+        retryButtonText.setPosition(retryButton.getPosition().x - 65, retryButton.getPosition().y - 25 + 6.f);
 
         menuButtonFromOver.setSize(sf::Vector2f(180.f, 60.f));
         menuButtonFromOver.setOrigin(menuButtonFromOver.getSize() / 2.f);
@@ -615,25 +598,18 @@ public:
         menuButtonFromOverText.setCharacterSize(28);
         menuButtonFromOverText.setString("Salir");
         menuButtonFromOverText.setFillColor(sf::Color::Black);
-        // sf::FloatRect mbov = menuButtonFromOverText.getLocalBounds();
-        // menuButtonFromOverText.setOrigin(mbov.width / 2.f, mbov.height / 2.f);
         menuButtonFromOverText.setPosition(menuButtonFromOver.getPosition().x - 30, menuButtonFromOver.getPosition().y - 25 + 6.f);
 
         gameOverText.setFont(fuente);
         gameOverText.setCharacterSize(44);
         gameOverText.setString("FIN DEL JUEGO");
         gameOverText.setFillColor(sf::Color::Black);
-        // sf::FloatRect got = gameOverText.getLocalBounds();
-        // gameOverText.setOrigin(got.width / 2.f, got.height / 2.f);
         gameOverText.setPosition(230.f, 80.f);
 
-        // limitar framerate para tener un comportamiento predecible
         window.setFramerateLimit(60);
     }
 
-
-
-    // processEvents: recoge eventos SFML y actúa según el estado actual del juego
+    // Recoge eventos SFML y actúa según el estado actual del juego
     void processEvents() {
         sf::Event evento;
         while (window.pollEvent(evento)) {
@@ -651,12 +627,10 @@ public:
 
             // EVENTOS SEGUN ESTADO
             if (state == GameState::MENU) {
-                // en el menú principal: click en el botón JUGAR o pulsar Enter/Espacio
+                // en el menú principal: click en el botón JUGAR
                 if (evento.type == sf::Event::MouseButtonPressed && evento.mouseButton.button == sf::Mouse::Left) {
                     sf::Vector2f world = window.mapPixelToCoords(sf::Vector2i(evento.mouseButton.x, evento.mouseButton.y));
                     if (menuButton.getGlobalBounds().contains(world)) {
-                        // iniciar juego: reiniciar tablero (3 movimientos en este ejemplo)
-
                         state = GameState::PLAYING;
                     }
                 }
@@ -673,7 +647,7 @@ public:
                     int x = evento.mouseButton.x;
                     int y = evento.mouseButton.y;
 
-                    // Convertir de pixels (ventana) a coordenadas lógicas mediante la vista actual
+                    // Convertir de pixels a coordenadas lógicas mediante la vista actual
                     auto rc = tablero.screenToCell(window, x, y);
                     int fila = rc.first;
                     int col = rc.second;
@@ -700,10 +674,10 @@ public:
         }
     }
 
-    // update: lógica que se ejecuta cada frame (temporización de limpieza, comprobación fin de juego, textos)
+    // Lógica que se ejecuta cada frame (temporización de limpieza, comprobación fin de juego, textos)
     void update() {
         if (state == GameState::PLAYING) {
-            // Si el tablero está en fase de limpieza, avanzamos pasos cada cleaningDelay
+            // Si el tablero está en fase de limpieza, avanza pasos cada cleaningDelay
             if (tablero.isCleaning()) {
                 if (cleaningClock.getElapsedTime() >= cleaningDelay) {
                     tablero.stepCleaning();
@@ -724,7 +698,7 @@ public:
         }
     }
 
-    // render: dibuja la UI y el tablero según el estado actual
+    // Dibuja la UI y el tablero según el estado actual
     void render() {
         window.clear(sf::Color::White);
 
