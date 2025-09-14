@@ -1,33 +1,17 @@
 #include <SFML/Graphics.hpp>
 #include <iostream>
 #include <ctime>
-#include <cstdlib>
-#include <algorithm>
-#include <cstring>
-
 using namespace std;
-
-// ------------------------------------------------------------
-// Este archivo contiene un juego Match-3 sencillo con SFML.
-// He añadido comentarios detallados (en español) explicando
-// las responsabilidades de clases y funciones y el flujo
-// del juego. No se ha modificado ninguna línea de código,
-// sólo se han agregado comentarios.
-// ------------------------------------------------------------
-
-// 
-// ----- Clase Gem -----
-// 
-// Representa una única gema del tablero.
-// Contiene un sf::Sprite para dibujarla y un entero 'tipo'
-// que identifica qué textura usa (color / forma / tipo).
+// Initializes a single gem on the board.
 class Gem {
 private:
-    sf::Sprite sprite; // sprite que se dibuja en pantalla
-    int tipo;          // identificador del tipo de gema
+    sf::Sprite sprite;
+    int tipo;          
 
 public:
-
+    Gem() {
+   
+    }
     // Constructor:
     // Recibe una textura, la posición top-left de la celda donde
     // debe ir la gema y el tipo (un entero).
@@ -42,32 +26,27 @@ public:
         tipo = tipoGem;
     }
 
-    // Dibuja la gema en la ventana proporcionada.
+
     void draw(sf::RenderWindow& window) {
         window.draw(sprite);
     }
 
-    // setPosition:
-    // Recibe coordenadas top-left (como en el grid) y posiciona
-    // el sprite centrado dentro de esa celda.
+
     void setPosition(float xTopLeft, float yTopLeft) {
         sf::FloatRect bounds = sprite.getLocalBounds();
         sprite.setPosition(xTopLeft + bounds.width / 2.f, yTopLeft + bounds.height / 2.f);
     }
 
-    // Accesores al tipo de gema.
+   
     int getTipo() const { return tipo; }
     void setTipo(int nuevoTipo) { tipo = nuevoTipo; }
 
-    // Modifica la escala visual (útil para marcar / seleccionar).
+    // Modifica el tamaño visual.
     void setScale(float sx, float sy) { sprite.setScale(sx, sy); }
-    // Restaura la escala visual por defecto.
+
     void resetVisual() { sprite.setScale(1.f, 1.f); }
 };
 
-//
-// ----- Clase Board -----
-// 
 // Esta clase guarda el estado del tablero (8x8), las texturas,
 // el puntaje, los movimientos y toda la lógica del juego:
 // - detectar combinaciones
@@ -410,8 +389,10 @@ public:
         if (!formaCombinacionAlIntercambiar(f1, c1, f2, c2)) return false;
 
         // swap punteros (real)
-        std::swap(matriz[f1][c1], matriz[f2][c2]);
-
+       // std::swap(matriz[f1][c1], matriz[f2][c2]);
+        Gem* temp = matriz[f1][c1];
+        matriz[f1][c1] = matriz[f2][c2];
+        matriz[f2][c2] = temp;
         // actualizar posiciones visuales (top-left coords)
         if (matriz[f1][c1] != nullptr) (*matriz[f1][c1]).setPosition(c1 * cellW + originX, f1 * cellH + originY);
         if (matriz[f2][c2] != nullptr) (*matriz[f2][c2]).setPosition(c2 * cellW + originX, f2 * cellH + originY);
