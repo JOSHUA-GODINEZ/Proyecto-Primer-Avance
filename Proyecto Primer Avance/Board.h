@@ -1,16 +1,16 @@
 #pragma once
-#include "Gem.h"
-// Guarda el estado del tablero (8x8) y las acciones de las gemas
+#include "Fruit.h"
+// Stores the board state (8x8) and fruit actions
 class Board {
 private:
-    Gem* matriz[8][8];
-    sf::Texture texturas[5];
-    int movimientosRestantes = 3, puntaje = 0;
+    Fruit* matrix[8][8];
+    sf::Texture textures[5];
+    int remainingMoves = 3, score = 0;
 
-    // Parar el tiempo cuando limpia el tablero
+    // Stop the cleaning process when clearing the board
     bool cleaningInProgress = false;
-    bool contarPuntajeEnCleaning = true;
-    // Acciones de Gem
+    bool countScoreDuringCleaning = true;
+    // Fruit actions
     bool marked[8][8];
     bool removalPending = false;
     const float MARK_SCALE = 1.35f;
@@ -19,411 +19,402 @@ private:
     int selectedRow = -1;
     int selectedCol = -1;
 
-    // coordenadas fijas para usar como sistema lógico de referencia
-
+    // fixed coordinates used as logical reference system
     const float originX = 117.f;
     const float originY = 100.f;
-    const float cellW = 69.f; // ancho de celda
-    const float cellH = 60.f; // alto de celda
+    const float cellW = 69.f; // cell width
+    const float cellH = 60.f; // cell height
 
 public:
 
-    // Inicializa variables, carga texturas, crea la matriz con gemas aleatorias
-    // y limpia combos iniciales (sin puntuar) hasta que el tablero quede estable.
+    // Initialize variables, load textures, create matrix with random fruits
+    // and clear initial combos (without scoring) until the board is stable.
     Board() {
         srand(time(nullptr));
-        texturas[0].loadFromFile("C:\\Joshua\\Proyecto Primer Avance\\Assets\\Sprite Apple.png");
-        texturas[1].loadFromFile("C:\\Joshua\\Proyecto Primer Avance\\Assets\\Sprite Orange.png");
-        texturas[2].loadFromFile("C:\\Joshua\\Proyecto Primer Avance\\Assets\\Sprite Banana.png");
-        texturas[3].loadFromFile("C:\\Joshua\\Proyecto Primer Avance\\Assets\\Sprite Watermelon.png");
-        texturas[4].loadFromFile("C:\\Joshua\\Proyecto Primer Avance\\Assets\\Sprite Grape.png");
-        // Cada celda recibe una Gem nueva con textura aleatoria.
+        textures[0].loadFromFile("C:\\Joshua\\Proyecto Primer Avance\\Assets\\Sprite Apple.png");
+        textures[1].loadFromFile("C:\\Joshua\\Proyecto Primer Avance\\Assets\\Sprite Orange.png");
+        textures[2].loadFromFile("C:\\Joshua\\Proyecto Primer Avance\\Assets\\Sprite Banana.png");
+        textures[3].loadFromFile("C:\\Joshua\\Proyecto Primer Avance\\Assets\\Sprite Watermelon.png");
+        textures[4].loadFromFile("C:\\Joshua\\Proyecto Primer Avance\\Assets\\Sprite Grape.png");
+        // Each cell receives a new Fruit with a random texture.
         for (int i = 0; i < 8; ++i) {
             for (int j = 0; j < 8; ++j) {
-                int tipo = std::rand() % 5;
-                matriz[i][j] = new Gem(texturas[tipo], sf::Vector2f(j * cellW + originX, i * cellH + originY), tipo);
+                int t = std::rand() % 5;
+                matrix[i][j] = new Fruit(textures[t], sf::Vector2f(j * cellW + originX, i * cellH + originY), t);
             }
         }
-        // Esto evita que el tablero empiece con combinaciones ya resueltas.
-        bool sigue = true;
-        while (sigue) {
-            if (limpiarCombosUnaVez(false)) {
-                aplicarGravedadYReemplazar();
+        // This prevents the board from starting with already-resolved combinations.
+        bool cont = true;
+        while (cont) {
+            if (clearCombosOnce(false)) {
+                applyGravityAndReplace();
             }
             else {
-                sigue = false;
+                cont = false;
             }
         }
     }
-    bool detectarCombinacionesSinEliminar() {
-        // horizontales
+
+    // Detects if there are any combinations without removing them.
+    bool detectCombinationsWithoutRemoving() {
+        // horizontals
         for (int i = 0; i < 8; ++i) {
-            int contador = 1;
+            int count = 1;
             for (int j = 1; j < 8; ++j) {
-                if (matriz[i][j] != nullptr && matriz[i][j - 1] != nullptr && (*matriz[i][j]).getTipo() == (*matriz[i][j - 1]).getTipo()) {
-                    ++contador;
-                    if (contador >= 3) return true; // si encontramos 3 iguales seguidos, hay combo
+                if (matrix[i][j] != nullptr && matrix[i][j - 1] != nullptr && (*matrix[i][j]).getType() == (*matrix[i][j - 1]).getType()) {
+                    ++count;
+                    if (count >= 3) return true; // found 3 equal in a row -> combo
                 }
                 else {
-                    contador = 1;
+                    count = 1;
                 }
             }
         }
-        // verticales
+        // verticals
         for (int j = 0; j < 8; ++j) {
-            int contador = 1;
+            int count = 1;
             for (int i = 1; i < 8; ++i) {
-                if (matriz[i][j] != nullptr && matriz[i - 1][j] != nullptr && (*matriz[i][j]).getTipo() == (*matriz[i - 1][j]).getTipo()) {
-                    ++contador;
-                    if (contador >= 3) return true;
+                if (matrix[i][j] != nullptr && matrix[i - 1][j] != nullptr && (*matrix[i][j]).getType() == (*matrix[i - 1][j]).getType()) {
+                    ++count;
+                    if (count >= 3) return true;
                 }
                 else {
-                    contador = 1;
+                    count = 1;
                 }
             }
         }
-        return false; // no se encontró ninguna secuencia
-    }
-    // Solo detecta si hay combo(no intercambia)
-    bool formaCombinacionAlIntercambiar(int f1, int c1, int f2, int c2) {
-        Gem* temp = matriz[f1][c1];
-        matriz[f1][c1] = matriz[f2][c2];
-        matriz[f2][c2] = temp;
-        bool hayCombo = detectarCombinacionesSinEliminar();
-        temp = matriz[f1][c1];
-        matriz[f1][c1] = matriz[f2][c2];
-        matriz[f2][c2] = temp;
-        return hayCombo;
+        return false; // no sequence found
     }
 
-    // Esta función detecta combos y los  marca y elimina.
-    // Dos modos el primero antes de empezar(no cuenta puntaje)
-    // El segundo cuando se esta jugando (si cuenta pumtaje)
-    //     * Si removalPending == false: marca las gemas (cambia su escala) y pone removalPending=true
-    //     * Si removalPending == true: elimina las gemas marcadas, suma puntaje, resetea marcas.
-    bool limpiarCombosUnaVez(bool contarPuntaje) {
-        if (!contarPuntaje) {
-            // Modo Inicializacion (contarpuntaje == false)
+    // Only detects whether swapping creates a combo (does not swap permanently)
+    bool formsCombinationWhenSwapping(int r1, int c1, int r2, int c2) {
+        Fruit* temp = matrix[r1][c1];
+        matrix[r1][c1] = matrix[r2][c2];
+        matrix[r2][c2] = temp;
+        bool hasCombo = detectCombinationsWithoutRemoving();
+        temp = matrix[r1][c1];
+        matrix[r1][c1] = matrix[r2][c2];
+        matrix[r2][c2] = temp;
+        return hasCombo;
+    }
 
-            bool huboEliminacion = false;
-            bool marcadasLocal[8][8] = { false };
+    // This function detects combos and either marks or removes them.
+    // Two modes:
+    //  * initialization (countScore == false): removes combos without scoring
+    //  * game mode (countScore == true):
+    //      - if removalPending == false: marks fruits (changes scale) and sets removalPending=true
+    //      - if removalPending == true: removes marked fruits, adds score, resets marks.
+    bool clearCombosOnce(bool countScore) {
+        if (!countScore) {
+            // Initialization mode (countScore == false)
+            bool anyRemoval = false;
+            bool markedLocal[8][8] = { false };
 
-            // horizontales: escanear cada fila buscando "runs" del mismo tipo
+            // horizontals: scan each row for runs of same type
             for (int i = 0; i < 8; ++i) {
                 int j = 0;
                 while (j < 8) {
-                    if (matriz[i][j] == nullptr) { ++j; continue; } // salta celdas vacías
-                    int tipo = (*matriz[i][j]).getTipo();
+                    if (matrix[i][j] == nullptr) { ++j; continue; } // skip empty cells
+                    int t = (*matrix[i][j]).getType();
                     int k = j + 1;
-
-                    while (k < 8 && matriz[i][k] != nullptr && (*matriz[i][k]).getTipo() == tipo) ++k;
+                    while (k < 8 && matrix[i][k] != nullptr && (*matrix[i][k]).getType() == t) ++k;
                     int runLen = k - j;
                     if (runLen >= 3) {
-
-                        for (int t = j; t < k; ++t) marcadasLocal[i][t] = true;
-                        huboEliminacion = true;
+                        for (int s = j; s < k; ++s) markedLocal[i][s] = true;
+                        anyRemoval = true;
                     }
                     j = k;
                 }
             }
 
-            // verticales: mismo procedimiento por columnas
+            // verticals: same procedure by columns
             for (int j = 0; j < 8; ++j) {
                 int i = 0;
                 while (i < 8) {
-                    if (matriz[i][j] == nullptr) { ++i; continue; }
-                    int tipo = (*matriz[i][j]).getTipo();
+                    if (matrix[i][j] == nullptr) { ++i; continue; }
+                    int t = (*matrix[i][j]).getType();
                     int k = i + 1;
-                    while (k < 8 && matriz[k][j] != nullptr && (*matriz[k][j]).getTipo() == tipo) ++k;
+                    while (k < 8 && matrix[k][j] != nullptr && (*matrix[k][j]).getType() == t) ++k;
                     int runLen = k - i;
                     if (runLen >= 3) {
-                        for (int t = i; t < k; ++t) marcadasLocal[t][j] = true;
-                        huboEliminacion = true;
+                        for (int s = i; s < k; ++s) markedLocal[s][j] = true;
+                        anyRemoval = true;
                     }
                     i = k;
                 }
             }
 
-            // si hubo eliminaciones, borrar físicamente las gemas marcadas
-            if (huboEliminacion) {
+            // if removals, delete the fruits physically
+            if (anyRemoval) {
                 for (int i = 0; i < 8; ++i) {
                     for (int j = 0; j < 8; ++j) {
-                        if (marcadasLocal[i][j] && matriz[i][j] != nullptr) {
-                            delete matriz[i][j];
-                            matriz[i][j] = nullptr;
+                        if (markedLocal[i][j] && matrix[i][j] != nullptr) {
+                            delete matrix[i][j];
+                            matrix[i][j] = nullptr;
                         }
                     }
                 }
             }
 
-            return huboEliminacion; // true si se eliminó al menos una gema
+            return anyRemoval; // true if at least one fruit was removed
         }
 
-        // MODO JUEGO (contarPuntaje == true)
-
+        // GAME MODE (countScore == true)
         if (!removalPending) {
-            //detectar y marcar
-            bool huboEliminacion = false;
-            bool marcadasLocal[8][8] = { false };
+            // detect and mark
+            bool anyRemoval = false;
+            bool markedLocal[8][8] = { false };
 
-            // marcar horizontales
+            // mark horizontals
             for (int i = 0; i < 8; ++i) {
                 int j = 0;
                 while (j < 8) {
-                    if (matriz[i][j] == nullptr) { ++j; continue; }
-                    int tipo = (*matriz[i][j]).getTipo();
+                    if (matrix[i][j] == nullptr) { ++j; continue; }
+                    int t = (*matrix[i][j]).getType();
                     int k = j + 1;
-                    while (k < 8 && matriz[i][k] != nullptr && (*matriz[i][k]).getTipo() == tipo) ++k;
+                    while (k < 8 && matrix[i][k] != nullptr && (*matrix[i][k]).getType() == t) ++k;
                     int runLen = k - j;
                     if (runLen >= 3) {
-                        for (int t = j; t < k; ++t) marcadasLocal[i][t] = true;
-                        huboEliminacion = true;
+                        for (int s = j; s < k; ++s) markedLocal[i][s] = true;
+                        anyRemoval = true;
                     }
                     j = k;
                 }
             }
 
-            // marcar verticales
+            // mark verticals
             for (int j = 0; j < 8; ++j) {
                 int i = 0;
                 while (i < 8) {
-                    if (matriz[i][j] == nullptr) { ++i; continue; }
-                    int tipo = (*matriz[i][j]).getTipo();
+                    if (matrix[i][j] == nullptr) { ++i; continue; }
+                    int t = (*matrix[i][j]).getType();
                     int k = i + 1;
-                    while (k < 8 && matriz[k][j] != nullptr && (*matriz[k][j]).getTipo() == tipo) ++k;
+                    while (k < 8 && matrix[k][j] != nullptr && (*matrix[k][j]).getType() == t) ++k;
                     int runLen = k - i;
                     if (runLen >= 3) {
-                        for (int t = i; t < k; ++t) marcadasLocal[t][j] = true;
-                        huboEliminacion = true;
+                        for (int s = i; s < k; ++s) markedLocal[s][j] = true;
+                        anyRemoval = true;
                     }
                     i = k;
                 }
             }
-            if (huboEliminacion) {
+
+            if (anyRemoval) {
                 for (int i = 0; i < 8; ++i) {
                     for (int j = 0; j < 8; ++j) {
-                        marked[i][j] = marcadasLocal[i][j];
-                        if (marked[i][j] && matriz[i][j] != nullptr) {
-                            (*matriz[i][j]).setScale(MARK_SCALE, MARK_SCALE); // agrandar para marcar
+                        marked[i][j] = markedLocal[i][j];
+                        if (marked[i][j] && matrix[i][j] != nullptr) {
+                            (*matrix[i][j]).setScale(MARK_SCALE, MARK_SCALE); // enlarge to mark
                         }
                     }
                 }
                 removalPending = true;
-                return true; // indica que hubo trabajo (pero aún no se borró)
+                return true; // indicates there is work (but not yet removed)
             }
             return false;
         }
         else {
-            // eliminar las marcadas y sumar puntaje
-            bool huboEliminacion = false;
+            // remove marked fruits and add score
+            bool anyRemoval = false;
             for (int i = 0; i < 8; ++i) {
                 for (int j = 0; j < 8; ++j) {
-                    if (marked[i][j] && matriz[i][j] != nullptr) {
-                        delete matriz[i][j];
-                        matriz[i][j] = nullptr;
-                        huboEliminacion = true;
-                        puntaje += 10; // suma 10 puntos por cada gema eliminada
+                    if (marked[i][j] && matrix[i][j] != nullptr) {
+                        delete matrix[i][j];
+                        matrix[i][j] = nullptr;
+                        anyRemoval = true;
+                        score += 10; // add 10 points per fruit removed
                     }
                 }
             }
 
-            // limpiar marcas y resetear el aspecto visual de las gemas que quedaron
+            // clear marks and reset visual aspect of remaining fruits
             for (int i = 0; i < 8; ++i) {
                 for (int j = 0; j < 8; ++j) {
                     marked[i][j] = false;
-                    if (matriz[i][j] != nullptr) (*matriz[i][j]).resetVisual();
+                    if (matrix[i][j] != nullptr) (*matrix[i][j]).resetVisual();
                 }
             }
 
-            removalPending = false; // terminamos la fase de eliminación
-            return huboEliminacion; // indica si se eliminó al menos una gema
+            removalPending = false; // finished removal phase
+            return anyRemoval; // whether at least one fruit was removed
         }
     }
 
-    // Hace que las gemas "caigan"  y rellenacon gemas nuevas arriba cuando hay celdas vacías.
-    void aplicarGravedadYReemplazar() {
+    // Makes fruits "fall" and fills with new fruits on top when there are empty cells.
+    void applyGravityAndReplace() {
         for (int col = 0; col < 8; ++col) {
-            // Aplica gravedad
-            for (int fila = 7; fila >= 0; --fila) {
-                if (matriz[fila][col] == nullptr) {
-                    int k = fila - 1;
-                    while (k >= 0 && matriz[k][col] == nullptr) --k;
+            // Apply gravity
+            for (int row = 7; row >= 0; --row) {
+                if (matrix[row][col] == nullptr) {
+                    int k = row - 1;
+                    while (k >= 0 && matrix[k][col] == nullptr) --k;
                     if (k >= 0) {
-                        // mover el puntero a la posición inferior
-                        matriz[fila][col] = matriz[k][col];
-                        matriz[k][col] = nullptr;
-                        (*matriz[fila][col]).setPosition(col * cellW + originX, fila * cellH + originY);
-                        (*matriz[fila][col]).resetVisual();
+                        // move pointer to lower position
+                        matrix[row][col] = matrix[k][col];
+                        matrix[k][col] = nullptr;
+                        (*matrix[row][col]).setPosition(col * cellW + originX, row * cellH + originY);
+                        (*matrix[row][col]).resetVisual();
                     }
                 }
             }
-            // rellena espacios vacios
-            for (int fila = 0; fila < 8; ++fila) {
-                if (matriz[fila][col] == nullptr) {
-                    int tipo = std::rand() % 5;
-                    matriz[fila][col] = new Gem(texturas[tipo], sf::Vector2f(col * cellW + originX, fila * cellH + originY), tipo);
+            // fill empty spaces
+            for (int row = 0; row < 8; ++row) {
+                if (matrix[row][col] == nullptr) {
+                    int t = std::rand() % 5;
+                    matrix[row][col] = new Fruit(textures[t], sf::Vector2f(col * cellW + originX, row * cellH + originY), t);
                 }
             }
         }
     }
-    // Destructor: liberar memoria de todas las gemas
+
+    // Destructor: free memory of all fruits
     ~Board() {
         for (int i = 0; i < 8; ++i)
             for (int j = 0; j < 8; ++j)
-                if (matriz[i][j] != nullptr) delete matriz[i][j];
+                if (matrix[i][j] != nullptr) delete matrix[i][j];
     }
 
-    // Dibuja todas las gemas en pantalla.
+    // Draw all fruits on screen.
     void draw(sf::RenderWindow& window) {
         for (int i = 0; i < 8; ++i)
             for (int j = 0; j < 8; ++j)
-                if (matriz[i][j] != nullptr)
-                    (*matriz[i][j]).draw(window);
+                if (matrix[i][j] != nullptr)
+                    (*matrix[i][j]).draw(window);
     }
 
-    // Intenta intercambiar dos celdas adyacentes si se forma una combinacion.
-   // inicia el proceso de limpieza (startCleaning).
-    bool intercambiar(int f1, int c1, int f2, int c2) {
+    // Tries to swap two adjacent cells if a combination is formed.
+    // starts the cleaning process (startCleaning).
+    bool swapCells(int r1, int c1, int r2, int c2) {
 
-        if (f1 < 0 || f1 >= 8 || c1 < 0 || c1 >= 8 ||
-            f2 < 0 || f2 >= 8 || c2 < 0 || c2 >= 8) return false;
+        if (r1 < 0 || r1 >= 8 || c1 < 0 || c1 >= 8 ||
+            r2 < 0 || r2 >= 8 || c2 < 0 || c2 >= 8) return false;
 
-        // comprobar adyacencia.
-        int df = f1 - f2; if (df < 0) df *= -1;
+        // check adjacency.
+        int dr = r1 - r2; if (dr < 0) dr *= -1;
         int dc = c1 - c2; if (dc < 0) dc *= -1;
-        if (!((df == 1 && dc == 0) || (df == 0 && dc == 1))) return false;
+        if (!((dr == 1 && dc == 0) || (dr == 0 && dc == 1))) return false;
 
-        // validar si el swap produce combo
-        if (!formaCombinacionAlIntercambiar(f1, c1, f2, c2)) return false;
+        // validate if the swap produces a combo
+        if (!formsCombinationWhenSwapping(r1, c1, r2, c2)) return false;
 
+        Fruit* temp = matrix[r1][c1];
+        matrix[r1][c1] = matrix[r2][c2];
+        matrix[r2][c2] = temp;
+        // update visual positions (top-left coords)
+        if (matrix[r1][c1] != nullptr) (*matrix[r1][c1]).setPosition(c1 * cellW + originX, r1 * cellH + originY);
+        if (matrix[r2][c2] != nullptr) (*matrix[r2][c2]).setPosition(c2 * cellW + originX, r2 * cellH + originY);
 
-        Gem* temp = matriz[f1][c1];
-        matriz[f1][c1] = matriz[f2][c2];
-        matriz[f2][c2] = temp;
-        // actualizar posiciones visuales (top-left coords)
-        if (matriz[f1][c1] != nullptr) (*matriz[f1][c1]).setPosition(c1 * cellW + originX, f1 * cellH + originY);
-        if (matriz[f2][c2] != nullptr) (*matriz[f2][c2]).setPosition(c2 * cellW + originX, f2 * cellH + originY);
-
-        --movimientosRestantes;
+        --remainingMoves;
         startCleaning(true);
         return true;
     }
 
-
-    // Marca que el tablero entra en modo "limpieza" y define si debe
-    // contarse puntaje durante la limpieza.
-    void startCleaning(bool contarP) {
+    // Marks that the board enters "cleaning" mode and defines whether
+    // scoring should be counted during cleaning.
+    void startCleaning(bool countScore) {
         cleaningInProgress = true;
-
+        countScoreDuringCleaning = countScore;
     }
 
-
-    // Ejecuta un paso de la limpieza (se llama repetidamente con delay
+    // Executes one step of cleaning (called repeatedly with delay)
     bool stepCleaning() {
         if (!cleaningInProgress) return false;
-        bool hubo = limpiarCombosUnaVez(contarPuntajeEnCleaning);
-        if (hubo) {
+        bool didSomething = clearCombosOnce(countScoreDuringCleaning);
+        if (didSomething) {
             if (removalPending) {
                 return true;
             }
             else {
-                aplicarGravedadYReemplazar();
+                applyGravityAndReplace();
                 return true;
             }
         }
         else {
-            cleaningInProgress = false; // ya no hay nada que limpiar
+            cleaningInProgress = false; // nothing left to clean
             return false;
         }
     }
 
-    // consulta si hay limpieza en curso.
+    // Query if cleaning is in progress.
     bool isCleaning() const { return cleaningInProgress; }
 
-
-    //  ejecuta limpieza completa hasta que no queden combos.
-    void limpiarCombosRepetidamente(bool contarPuntaje = true) {
-        bool sigue = true;
-        while (sigue) {
-            if (limpiarCombosUnaVez(contarPuntaje)) {
-                aplicarGravedadYReemplazar();
+    // execute full cleaning until no combos remain.
+    void clearCombosRepeatedly(bool countScore = true) {
+        bool cont = true;
+        while (cont) {
+            if (clearCombosOnce(countScore)) {
+                applyGravityAndReplace();
             }
-            else sigue = false;
+            else cont = false;
         }
     }
 
-    // Accesores para puntaje y movimientos
-    int getPuntaje() const { return puntaje; }
-    int getMovimientosRestantes() const { return movimientosRestantes; }
-    bool quedanMovimientos() const { return movimientosRestantes > 0; }
+    // Accessors for score and moves
+    int getScore() const { return score; }
+    int getRemainingMoves() const { return remainingMoves; }
+    bool hasMoves() const { return remainingMoves > 0; }
 
-    void resetMovimientos(int n) { movimientosRestantes = n; }
+    void resetMoves(int n) { remainingMoves = n; }
 
-
-    // Lógica de control de selección por clicks:
-    // - primer click: selecciona la gema (la escala)
-    // - segundo click:
-    //    * si es la misma celda -> deselecciona
-    //    * si es adyacente -> intenta intercambiar (y si es válido, procesa limpieza)
-    void selectOrSwap(int fila, int col) {
+    // Selection control logic by clicks:
+    // - first click: selects the fruit (scales it)
+    // - second click:
+    //    * if same cell -> deselect
+    //    * if adjacent -> attempts to swap (and if valid, processes cleaning)
+    void selectOrSwap(int row, int col) {
         if (selectedRow == -1) {
-            selectedRow = fila; selectedCol = col;
-            (*matriz[selectedRow][selectedCol]).setScale(SELECT_SCALE, SELECT_SCALE);
-
+            selectedRow = row; selectedCol = col;
+            (*matrix[selectedRow][selectedCol]).setScale(SELECT_SCALE, SELECT_SCALE);
         }
         else {
-            bool ok = intercambiar(selectedRow, selectedCol, fila, col);
-            (*matriz[selectedRow][selectedCol]).resetVisual();
+            bool ok = swapCells(selectedRow, selectedCol, row, col);
+            (*matrix[selectedRow][selectedCol]).resetVisual();
             selectedRow = -1; selectedCol = -1;
-
         }
     }
 
-
-    // Se utiliza para convertir la posición del ratón en índices de fila/columna (SMFL).
-    pair <int, int> screenToCell(sf::RenderWindow& win, int mouseX, int mouseY) {
+    // Converts mouse position to row/col indices (SMFL).
+    pair<int, int> screenToCell(sf::RenderWindow& win, int mouseX, int mouseY) {
         sf::Vector2f world = win.mapPixelToCoords(sf::Vector2i(mouseX, mouseY));
         int col = int(std::floor((world.x - originX) / cellW));
         int row = int(std::floor((world.y - originY) / cellH));
         return { row, col };
     }
 
-    // Elimina el tablero y crea otro como en el constructor
+    // Deletes the board and creates a new one like in the constructor
     void resetBoard(int newMoves = 20) {
-        movimientosRestantes = newMoves;
-        puntaje = 0;
+        remainingMoves = newMoves;
+        score = 0;
         cleaningInProgress = false;
-        contarPuntajeEnCleaning = true;
+        countScoreDuringCleaning = true;
         removalPending = false;
         selectedRow = -1; selectedCol = -1;
 
-
-        // borrar gemas actuales (liberar memoria)
+        // delete current fruits (free memory)
         for (int i = 0; i < 8; ++i) {
             for (int j = 0; j < 8; ++j) {
-                if (matriz[i][j] != nullptr) {
-                    delete matriz[i][j];
-                    matriz[i][j] = nullptr;
+                if (matrix[i][j] != nullptr) {
+                    delete matrix[i][j];
+                    matrix[i][j] = nullptr;
                 }
             }
         }
 
-        // crear nueva matriz con gemas aleatorias
+        // create new matrix with random fruits
         for (int i = 0; i < 8; ++i) {
             for (int j = 0; j < 8; ++j) {
-                int tipo = std::rand() % 5;
-                matriz[i][j] = new Gem(texturas[tipo], sf::Vector2f(j * cellW + originX, i * cellH + originY), tipo);
+                int t = std::rand() % 5;
+                matrix[i][j] = new Fruit(textures[t], sf::Vector2f(j * cellW + originX, i * cellH + originY), t);
             }
         }
 
-
-        bool sigue = true;
-        while (sigue) {
-            if (limpiarCombosUnaVez(false)) {
-                aplicarGravedadYReemplazar();
+        bool cont = true;
+        while (cont) {
+            if (clearCombosOnce(false)) {
+                applyGravityAndReplace();
             }
             else {
-                sigue = false;
+                cont = false;
             }
         }
     }

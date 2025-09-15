@@ -1,20 +1,20 @@
 #pragma once
 #include "Board.h"
-// Maneja el juego y sus menus
+// Manages the game and its menus
 class Game {
 private:
     sf::RenderWindow window{ sf::VideoMode(800, 600), "Match-3" };
-    sf::Font fuente;
-    sf::Text textoPuntaje;
-    sf::Text textoMovimientos;
-    Board tablero;
+    sf::Font font;
+    sf::Text scoreText;
+    sf::Text movesText;
+    Board board;
 
-    sf::Texture fondoTexture;
-    sf::Sprite fondoSprite;
-    sf::Texture fondoTexture1;
-    sf::Sprite fondoSprite1;
+    sf::Texture backgroundTexture;
+    sf::Sprite backgroundSprite;
+    sf::Texture backgroundTexture1;
+    sf::Sprite backgroundSprite1;
 
-    // delay entre pasos
+    // delay between cleaning steps
     sf::Clock cleaningClock;
     sf::Time cleaningDelay = (sf::milliseconds(900));
 
@@ -30,7 +30,7 @@ private:
     sf::Text leaveButtonText;
     sf::Text gameOverText;
 
-    // Estado del juego: MENU, PLAYING o GAME_OVER
+    // Game state: MENU, PLAYING or GAME_OVER
     enum class GameState { MENU, PLAYING, GAME_OVER };
     GameState state = GameState::MENU;
 
@@ -38,54 +38,51 @@ public:
 
     Game() {
 
-        // fijamos la vista lógica en 800x600 (igual que tu diseño original)
+        // set logical view to 800x600 (same as original design)
         sf::View view(sf::FloatRect(0.f, 0.f, 800.f, 600.f));
         window.setView(view);
 
-        // cargar recursos (fuente y fondos)
-        fuente.loadFromFile("C:\\Joshua\\Proyecto Primer Avance\\Assets\\Arimo-font.ttf");
+        // load resources (font and backgrounds)
+        font.loadFromFile("C:\\Joshua\\Proyecto Primer Avance\\Assets\\Arimo-font.ttf");
 
+        backgroundTexture.loadFromFile("C:\\Joshua\\Proyecto Primer Avance\\Assets\\Fruit background.png");
+        backgroundSprite.setTexture(backgroundTexture);
+        backgroundSprite.setPosition(124.f, 110.f);
 
+        backgroundTexture1.loadFromFile("C:\\Joshua\\Proyecto Primer Avance\\Assets\\Menu background.png");
+        backgroundSprite1.setTexture(backgroundTexture1);
+        backgroundSprite1.setPosition(0.f, 0.f);
+        backgroundSprite1.setScale(1.1, 1.45);
 
-        fondoTexture.loadFromFile("C:\\Joshua\\Proyecto Primer Avance\\Assets\\Fruit background.png");
-        fondoSprite.setTexture(fondoTexture);
-        fondoSprite.setPosition(124.f, 110.f);
+        // configure texts (score and moves)
+        scoreText.setFont(font);
+        scoreText.setCharacterSize(20);
+        scoreText.setFillColor(sf::Color::Black);
+        scoreText.setPosition(20.f, 10.f);
 
+        movesText.setFont(font);
+        movesText.setCharacterSize(20);
+        movesText.setFillColor(sf::Color::Black);
+        movesText.setPosition(300.f, 10.f);
 
-        fondoTexture1.loadFromFile("C:\\Joshua\\Proyecto Primer Avance\\Assets\\Menu background.png");
-        fondoSprite1.setTexture(fondoTexture1);
-        fondoSprite1.setPosition(0.f, 0.f);
-        fondoSprite1.setScale(1.1, 1.45);
-
-        // configurar textos (puntaje y movimientos)
-        textoPuntaje.setFont(fuente);
-        textoPuntaje.setCharacterSize(20);
-        textoPuntaje.setFillColor(sf::Color::Black);
-        textoPuntaje.setPosition(20.f, 10.f);
-
-        textoMovimientos.setFont(fuente);
-        textoMovimientos.setCharacterSize(20);
-        textoMovimientos.setFillColor(sf::Color::Black);
-        textoMovimientos.setPosition(300.f, 10.f);
-
-        // MENU UI: botón central "JUGAR"
+        // MENU UI: central "PLAY" button
         playButton.setSize(sf::Vector2f(200.f, 80.f));
         playButton.setPosition(300.f, 300.f);
         playButton.setFillColor(sf::Color::Green);
 
-        playButtonText.setFont(fuente);
+        playButtonText.setFont(font);
         playButtonText.setCharacterSize(32);
         playButtonText.setString("JUGAR");
         playButtonText.setFillColor(sf::Color::Black);
         playButtonText.setPosition(playButton.getPosition().x + 47, playButton.getPosition().y + 20);
 
-        titleText.setFont(fuente);
+        titleText.setFont(font);
         titleText.setCharacterSize(48);
         titleText.setString("MATCH-3");
         titleText.setFillColor(sf::Color::Black);
         titleText.setPosition(300.f, 100.f);
 
-        // GAME_OVER UI: botones Reintentar y Menu
+        // GAME_OVER UI: Retry and Exit buttons
         retryButton.setSize(sf::Vector2f(180.f, 60.f));
         retryButton.setOrigin(retryButton.getSize() / 2.f);
         retryButton.setPosition(400.f, 340.f);
@@ -93,11 +90,11 @@ public:
         retryButton.setOutlineThickness(3.f);
         retryButton.setOutlineColor(sf::Color::Black);
 
-        retryButtonText.setFont(fuente);
-        retryButtonText.setCharacterSize(28);
-        retryButtonText.setString("Reintentar");
+        retryButtonText.setFont(font);
+        retryButtonText.setCharacterSize(23);
+        retryButtonText.setString("REINTENTAR");
         retryButtonText.setFillColor(sf::Color::Black);
-        retryButtonText.setPosition(retryButton.getPosition().x - 65, retryButton.getPosition().y - 25 + 6.f);
+        retryButtonText.setPosition(retryButton.getPosition().x - 74, retryButton.getPosition().y - 20 + 6.f);
 
         leaveButton.setSize(sf::Vector2f(180.f, 60.f));
         leaveButton.setOrigin(leaveButton.getSize() / 2.f);
@@ -106,13 +103,13 @@ public:
         leaveButton.setOutlineThickness(3.f);
         leaveButton.setOutlineColor(sf::Color::Black);
 
-        leaveButtonText.setFont(fuente);
+        leaveButtonText.setFont(font);
         leaveButtonText.setCharacterSize(28);
-        leaveButtonText.setString("Salir");
+        leaveButtonText.setString("SALIR");
         leaveButtonText.setFillColor(sf::Color::Black);
-        leaveButtonText.setPosition(leaveButton.getPosition().x - 30, leaveButton.getPosition().y - 25 + 6.f);
+        leaveButtonText.setPosition(leaveButton.getPosition().x - 40, leaveButton.getPosition().y - 25 + 6.f);
 
-        gameOverText.setFont(fuente);
+        gameOverText.setFont(font);
         gameOverText.setCharacterSize(44);
         gameOverText.setString("FIN DEL JUEGO");
         gameOverText.setFillColor(sf::Color::Black);
@@ -121,157 +118,152 @@ public:
         window.setFramerateLimit(60);
     }
 
-    // Recoge eventos SFML y actúa según el estado actual del juego
+    // Collects SFML events and acts according to the current game state
     void processEvents() {
-        sf::Event evento;
-        while (window.pollEvent(evento)) {
-            if (evento.type == sf::Event::Closed) window.close();
+        sf::Event event;
+        while (window.pollEvent(event)) {
+            if (event.type == sf::Event::Closed) window.close();
 
-            if (evento.type == sf::Event::Resized) {
-                // si se redimensiona la ventana, reajustamos la vista lógica 800x600
+            if (event.type == sf::Event::Resized) {
+                // if window resized, readjust logical view 800x600
                 sf::View view(sf::FloatRect(0.f, 0.f, 800.f, 600.f));
                 window.setView(view);
-                if (fondoTexture1.getSize().x != 0 && fondoTexture1.getSize().y != 0) {
-                    fondoSprite1.setScale(800.f / (float)fondoTexture1.getSize().x, 600.f / (float)fondoTexture1.getSize().y);
+                if (backgroundTexture1.getSize().x != 0 && backgroundTexture1.getSize().y != 0) {
+                    backgroundSprite1.setScale(800.f / (float)backgroundTexture1.getSize().x, 600.f / (float)backgroundTexture1.getSize().y);
                 }
                 continue;
             }
 
-            // EVENTOS SEGUN ESTADO
+            // EVENTS BY STATE
             if (state == GameState::MENU) {
-                // en el menú principal: click en el botón JUGAR
-                if (evento.type == sf::Event::MouseButtonPressed && evento.mouseButton.button == sf::Mouse::Left) {
-                    sf::Vector2f world = window.mapPixelToCoords(sf::Vector2i(evento.mouseButton.x, evento.mouseButton.y));
+                // in main menu: click on PLAY button
+                if (event.type == sf::Event::MouseButtonPressed && event.mouseButton.button == sf::Mouse::Left) {
+                    sf::Vector2f world = window.mapPixelToCoords(sf::Vector2i(event.mouseButton.x, event.mouseButton.y));
                     if (playButton.getGlobalBounds().contains(world)) {
                         state = GameState::PLAYING;
                     }
                 }
             }
             else if (state == GameState::PLAYING) {
-                // ignorar clics si está limpiando.
-                if (tablero.isCleaning()) continue;
+                // ignore clicks if cleaning.
+                if (board.isCleaning()) continue;
 
-                if (evento.type == sf::Event::MouseButtonPressed && evento.mouseButton.button == sf::Mouse::Left) {
-                    if (!tablero.quedanMovimientos()) {
+                if (event.type == sf::Event::MouseButtonPressed && event.mouseButton.button == sf::Mouse::Left) {
+                    if (!board.hasMoves()) {
                         continue;
                     }
 
-                    int x = evento.mouseButton.x;
-                    int y = evento.mouseButton.y;
+                    int x = event.mouseButton.x;
+                    int y = event.mouseButton.y;
 
-                    // Convertir de pixels a coordenadas lógicas mediante la vista actual
-                    auto rc = tablero.screenToCell(window, x, y);
-                    int fila = rc.first;
+                    // Convert from pixels to logical coordinates using the current view
+                    auto rc = board.screenToCell(window, x, y);
+                    int row = rc.first;
                     int col = rc.second;
 
-                    if (fila >= 0 && fila < 8 && col >= 0 && col < 8) {
-                        tablero.selectOrSwap(fila, col);
+                    if (row >= 0 && row < 8 && col >= 0 && col < 8) {
+                        board.selectOrSwap(row, col);
                     }
                 }
             }
             else if (state == GameState::GAME_OVER) {
-                // en pantalla de game over: botones Reintentar y Menu
-                if (evento.type == sf::Event::MouseButtonPressed && evento.mouseButton.button == sf::Mouse::Left) {
-                    sf::Vector2f world = window.mapPixelToCoords(sf::Vector2i(evento.mouseButton.x, evento.mouseButton.y));
+                // on game over screen: Retry and Exit buttons
+                if (event.type == sf::Event::MouseButtonPressed && event.mouseButton.button == sf::Mouse::Left) {
+                    sf::Vector2f world = window.mapPixelToCoords(sf::Vector2i(event.mouseButton.x, event.mouseButton.y));
                     if (retryButton.getGlobalBounds().contains(world)) {
-                        tablero.resetBoard(3);
+                        board.resetBoard(3);
                         state = GameState::PLAYING;
                     }
                     else if (leaveButton.getGlobalBounds().contains(world)) {
                         window.close();
                     }
                 }
-
             }
         }
     }
 
-    // Lógica que se ejecuta cada frame (temporización de limpieza, comprobación fin de juego, textos)
+    // Logic executed every frame (cleaning timing, end-of-game check, texts)
     void update() {
         if (state == GameState::PLAYING) {
-            // Si el tablero está en fase de limpieza, avanza pasos cada cleaningDelay
-            if (tablero.isCleaning()) {
+            // If board is in cleaning phase, advance steps every cleaningDelay
+            if (board.isCleaning()) {
                 if (cleaningClock.getElapsedTime() >= cleaningDelay) {
-                    tablero.stepCleaning();
+                    board.stepCleaning();
                     cleaningClock.restart();
                 }
             }
 
-            // detectar fin de juego: sin movimientos y no está limpiando
-            if (!tablero.quedanMovimientos() && !tablero.isCleaning()) {
+            // detect end of game: no moves and not cleaning
+            if (!board.hasMoves() && !board.isCleaning()) {
                 state = GameState::GAME_OVER;
             }
 
-            // actualizar textos en pantalla con valores actuales
-            textoPuntaje.setString("Puntaje: " + to_string(tablero.getPuntaje()));
-            textoMovimientos.setString("Movimientos: " + to_string(tablero.getMovimientosRestantes()));
-            textoMovimientos.setPosition(640.f, 10.f);
-
+            // update on-screen texts with current values
+            scoreText.setString("PUNTUACIÓN: " + to_string(board.getScore()));
+            movesText.setString("MOVIMIENTOS RESTANTES: " + to_string(board.getRemainingMoves()));
+            movesText.setPosition(500.f, 10.f);
         }
     }
 
-    // Dibuja la UI y el tablero según el estado actual
+    // Draw UI and board according to the current state
     void render() {
         window.clear(sf::Color::White);
 
         if (state == GameState::MENU) {
-            if (fondoTexture1.getSize().x != 0 && fondoTexture1.getSize().y != 0) window.draw(fondoSprite1);
+            if (backgroundTexture1.getSize().x != 0 && backgroundTexture1.getSize().y != 0) window.draw(backgroundSprite1);
 
-            // título + botón
+            // title + button
             window.draw(titleText);
             window.draw(playButton);
             window.draw(playButtonText);
         }
         else if (state == GameState::PLAYING) {
-            if (fondoTexture1.getSize().x != 0 && fondoTexture1.getSize().y != 0) window.draw(fondoSprite1);
-            if (fondoTexture.getSize().x != 0 && fondoTexture.getSize().y != 0) window.draw(fondoSprite);
+            if (backgroundTexture1.getSize().x != 0 && backgroundTexture1.getSize().y != 0) window.draw(backgroundSprite1);
+            if (backgroundTexture.getSize().x != 0 && backgroundTexture.getSize().y != 0) window.draw(backgroundSprite);
 
-            // dibujar tablero (gemas)
-            tablero.draw(window);
+            // draw board (fruits)
+            board.draw(window);
 
-            // dibujar textos si la fuente se cargó correctamente
-
-            window.draw(textoPuntaje);
-            window.draw(textoMovimientos);
-
+            // draw texts if font loaded correctly
+            window.draw(scoreText);
+            window.draw(movesText);
         }
         else if (state == GameState::GAME_OVER) {
-            if (fondoTexture1.getSize().x != 0 && fondoTexture1.getSize().y != 0) window.draw(fondoSprite1);
+            if (backgroundTexture1.getSize().x != 0 && backgroundTexture1.getSize().y != 0) window.draw(backgroundSprite1);
 
-            // overlay simple semi-transparente
+            // simple semi-transparent overlay
             sf::RectangleShape overlay(sf::Vector2f(800.f, 600.f));
             overlay.setFillColor(sf::Color(255, 255, 255, 200));
             overlay.setPosition(0.f, 0.f);
             window.draw(overlay);
 
-            // dibujar menú de game over
+            // draw game over menu
             window.draw(gameOverText);
             window.draw(retryButton);
             window.draw(retryButtonText);
             window.draw(leaveButton);
             window.draw(leaveButtonText);
 
-            // mostrar puntaje final
+            // show final score
             sf::Text finalScore;
-            finalScore.setFont(fuente);
+            finalScore.setFont(font);
             finalScore.setCharacterSize(28);
-            finalScore.setString("Puntaje final: " + to_string(tablero.getPuntaje()));
+            finalScore.setString("Final Score: " + to_string(board.getScore()));
             finalScore.setFillColor(sf::Color::Black);
 
             finalScore.setPosition(300.f, 200.f);
             window.draw(finalScore);
         }
 
-
         window.display();
     }
-    // run: bucle principal del juego (eventos -> update -> render)
+
+    // run: main game loop (events -> update -> render)
     void run() {
         while (window.isOpen()) {
             processEvents();
             update();
             render();
-
         }
     }
 };
