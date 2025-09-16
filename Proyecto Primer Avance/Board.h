@@ -5,7 +5,7 @@ class Board {
 private:
     Fruit* matrix[8][8];
     sf::Texture textures[5];
-    int remainingMoves = 3, score = 0;
+    int remainingMoves = 20, score = 0;
 
     // Stop the cleaning process when clearing the board
     bool cleaningInProgress = false;
@@ -382,7 +382,7 @@ public:
     }
 
     // Deletes the board and creates a new one like in the constructor
-    void resetBoard(int newMoves = 20) {
+    void resetBoard(int newMoves) {
         remainingMoves = newMoves;
         score = 0;
         cleaningInProgress = false;

@@ -171,7 +171,7 @@ public:
                 if (event.type == sf::Event::MouseButtonPressed && event.mouseButton.button == sf::Mouse::Left) {
                     sf::Vector2f world = window.mapPixelToCoords(sf::Vector2i(event.mouseButton.x, event.mouseButton.y));
                     if (retryButton.getGlobalBounds().contains(world)) {
-                        board.resetBoard(3);
+                        board.resetBoard(20);
                         state = GameState::PLAYING;
                     }
                     else if (leaveButton.getGlobalBounds().contains(world)) {
@@ -201,7 +201,7 @@ public:
             // update on-screen texts with current values
             scoreText.setString("PUNTUACIÓN: " + to_string(board.getScore()));
             movesText.setString("MOVIMIENTOS RESTANTES: " + to_string(board.getRemainingMoves()));
-            movesText.setPosition(500.f, 10.f);
+            movesText.setPosition(490.f, 10.f);
         }
     }
 
