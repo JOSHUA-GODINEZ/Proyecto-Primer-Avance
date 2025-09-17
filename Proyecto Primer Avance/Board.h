@@ -31,11 +31,11 @@ public:
     // and clear initial combos (without scoring) until the board is stable.
     Board() {
         srand(time(nullptr));
-        textures[0].loadFromFile("C:\\Joshua\\Proyecto Primer Avance\\Assets\\Sprite Apple.png");
-        textures[1].loadFromFile("C:\\Joshua\\Proyecto Primer Avance\\Assets\\Sprite Orange.png");
-        textures[2].loadFromFile("C:\\Joshua\\Proyecto Primer Avance\\Assets\\Sprite Banana.png");
-        textures[3].loadFromFile("C:\\Joshua\\Proyecto Primer Avance\\Assets\\Sprite Watermelon.png");
-        textures[4].loadFromFile("C:\\Joshua\\Proyecto Primer Avance\\Assets\\Sprite Grape.png");
+        textures[0].loadFromFile("C:\\Joshua\\Proyecto\\Assets\\Sprite Apple.png");
+        textures[1].loadFromFile("C:\\Joshua\\Proyecto\\Assets\\Sprite Orange.png");
+        textures[2].loadFromFile("C:\\Joshua\\Proyecto\\Assets\\Sprite Banana.png");
+        textures[3].loadFromFile("C:\\Joshua\\Proyecto\\Assets\\Sprite Watermelon.png");
+        textures[4].loadFromFile("C:\\Joshua\\Proyecto\\Assets\\Sprite Grape.png");
         // Each cell receives a new Fruit with a random texture.
         for (int i = 0; i < 8; ++i) {
             for (int j = 0; j < 8; ++j) {

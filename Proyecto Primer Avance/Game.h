@@ -43,13 +43,13 @@ public:
         window.setView(view);
 
         // load resources (font and backgrounds)
-        font.loadFromFile("C:\\Joshua\\Proyecto Primer Avance\\Assets\\Arimo-font.ttf");
+        font.loadFromFile("C:\\Joshua\\Proyecto\\Assets\\Arimo-font.ttf");
 
-        backgroundTexture.loadFromFile("C:\\Joshua\\Proyecto Primer Avance\\Assets\\Fruit background.png");
+        backgroundTexture.loadFromFile("C:\\Joshua\\Proyecto\\Assets\\Fruit background.png");
         backgroundSprite.setTexture(backgroundTexture);
         backgroundSprite.setPosition(124.f, 110.f);
 
-        backgroundTexture1.loadFromFile("C:\\Joshua\\Proyecto Primer Avance\\Assets\\Menu background.png");
+        backgroundTexture1.loadFromFile("C:\\Joshua\\Proyecto\\Assets\\Menu background.png");
         backgroundSprite1.setTexture(backgroundTexture1);
         backgroundSprite1.setPosition(0.f, 0.f);
         backgroundSprite1.setScale(1.1, 1.45);
