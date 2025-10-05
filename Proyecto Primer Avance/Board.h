@@ -4,9 +4,9 @@
 class Board {
 private:
     Fruit* matrix[8][8];
-    sf::Texture textures[5];
-    int remainingMoves = 20, score = 0;
-
+    sf::Texture textures[7];
+    int remainingMoves = 1, score = 0,level=1;
+ 
     // Stop the cleaning process when clearing the board
     bool cleaningInProgress = false;
     bool countScoreDuringCleaning = true;
@@ -31,11 +31,13 @@ public:
     // and clear initial combos (without scoring) until the board is stable.
     Board() {
         srand(time(nullptr));
-        textures[0].loadFromFile("C:\\Joshua\\Proyecto\\Assets\\Sprite Apple.png");
-        textures[1].loadFromFile("C:\\Joshua\\Proyecto\\Assets\\Sprite Orange.png");
-        textures[2].loadFromFile("C:\\Joshua\\Proyecto\\Assets\\Sprite Banana.png");
-        textures[3].loadFromFile("C:\\Joshua\\Proyecto\\Assets\\Sprite Watermelon.png");
-        textures[4].loadFromFile("C:\\Joshua\\Proyecto\\Assets\\Sprite Grape.png");
+        textures[0].loadFromFile("C:\\Joshua\\Proyecto Primer Avance\\Assets\\Sprite Apple.png");
+        textures[1].loadFromFile("C:\\Joshua\\Proyecto Primer Avance\\Assets\\Sprite Orange.png");
+        textures[2].loadFromFile("C:\\Joshua\\Proyecto Primer Avance\\Assets\\Sprite Banana.png");
+        textures[3].loadFromFile("C:\\Joshua\\Proyecto Primer Avance\\Assets\\Sprite Watermelon.png");
+        textures[4].loadFromFile("C:\\Joshua\\Proyecto Primer Avance\\Assets\\Sprite Grape.png");
+        textures[5].loadFromFile("C:\\Joshua\\practica\\Sprites\\hielo pureba.jpg" );
+        textures[6].loadFromFile("C:\\Joshua\\practica\\Sprites\\preuba bomba.jpg");
         // Each cell receives a new Fruit with a random texture.
         for (int i = 0; i < 8; ++i) {
             for (int j = 0; j < 8; ++j) {
@@ -260,8 +262,14 @@ public:
             // fill empty spaces
             for (int row = 0; row < 8; ++row) {
                 if (matrix[row][col] == nullptr) {
-                    int t = std::rand() % 5;
-                    matrix[row][col] = new Fruit(textures[t], sf::Vector2f(col * cellW + originX, row * cellH + originY), t);
+                    int t1 = rand() % 20;
+                  //  if (t1 == 5) {
+                   //     matrix[row][col] = new Fruit(textures[t1], sf::Vector2f(col * cellW + originX, row * cellH + originY), t1);
+                  //  }
+                  //  else {
+                        int t = std::rand() % 5;
+                        matrix[row][col] = new Fruit(textures[t], sf::Vector2f(col * cellW + originX, row * cellH + originY), t);
+                   // }
                 }
             }
         }
@@ -353,7 +361,8 @@ public:
     int getScore() const { return score; }
     int getRemainingMoves() const { return remainingMoves; }
     bool hasMoves() const { return remainingMoves > 0; }
-
+    void setLevel(int level) { this->level = level; }
+    int getLevel() { return level; }
     void resetMoves(int n) { remainingMoves = n; }
 
     // Selection control logic by clicks:
@@ -382,8 +391,8 @@ public:
     }
 
     // Deletes the board and creates a new one like in the constructor
-    void resetBoard(int newMoves) {
-        remainingMoves = newMoves;
+    void resetBoard() {
+        remainingMoves =5;
         score = 0;
         cleaningInProgress = false;
         countScoreDuringCleaning = true;
@@ -403,8 +412,14 @@ public:
         // create new matrix with random fruits
         for (int i = 0; i < 8; ++i) {
             for (int j = 0; j < 8; ++j) {
-                int t = std::rand() % 5;
-                matrix[i][j] = new Fruit(textures[t], sf::Vector2f(j * cellW + originX, i * cellH + originY), t);
+                int  t1 = rand() % 20;
+                if (t1 == 5) {
+                    matrix[i][j] = new BombFruit(textures[5], sf::Vector2f(j * cellW + originX, i * cellH + originY), t1);
+               }
+                else {
+                    int t = std::rand() % 5;
+                    matrix[i][j] = new Fruit(textures[t], sf::Vector2f(j * cellW + originX, i * cellH + originY), t);
+                }
             }
         }
 
