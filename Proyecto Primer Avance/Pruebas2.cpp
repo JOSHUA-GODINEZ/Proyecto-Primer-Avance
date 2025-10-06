@@ -1,10 +1,3 @@
-// main.cpp
-// Código base (frutas, bombas, hielo, niveles) + sistema de objetivos mostrado arriba a la derecha
-// Nivel1: eliminar 20 frutas de un tipo aleatorio (entre 5 normales).
-// Nivel2: eliminar 3 hielos.
-// Nivel3: conseguir 500 puntos.
-// El progreso se actualiza en tiempo real y se muestra en pantalla final.
-
 #include <SFML/Graphics.hpp>
 #include <iostream>
 #include <vector>
@@ -125,8 +118,8 @@ private:
     vector<sf::Texture> textures;
 
     // layout logical
-    const float originX = 122.f;
-    const float originY = 107.f;
+    const float originX = 117.f;
+    const float originY = 100.f;
     const float cellW = 69.f;
     const float cellH = 60.f;
 
@@ -143,7 +136,7 @@ private:
     int lastSwapR2 = -1, lastSwapC2 = -1;
 
     // gameplay
-    int remainingMoves = 4;
+    int remainingMoves = 3; // fixes: default 10 and no variation by difficulty
     int score = 0;
     int level = 1;
 
@@ -177,7 +170,7 @@ private:
         objectiveTargetFruit = -1;
         if (lvl == 1) {
             objectiveKind = 1;
-            objectiveTarget = 20;
+            objectiveTarget = 10;
             // seleccionar aleatoriamente tipo normal [0..NUM_NORMAL-1]
             objectiveTargetFruit = rand() % NUM_NORMAL;
         }
@@ -187,8 +180,8 @@ private:
         }
         else if (lvl == 3) {
             objectiveKind = 3;
-            objectiveTarget = 500;
-            objectiveProgress = score; // starts at 0
+            objectiveTarget = 200;
+            objectiveProgress = score; // starts at current score
         }
     }
 
@@ -225,7 +218,7 @@ public:
 
         level = startLevel;
         initObjectiveForLevel(level);
-
+        remainingMoves = 3;
         // init arrays & fill randomly
         for (int r = 0; r < SIZE; ++r)
             for (int c = 0; c < SIZE; ++c) {
@@ -763,7 +756,7 @@ public:
         for (int r = 0; r < SIZE; ++r) for (int c = 0; c < SIZE; ++c) {
             marked[r][c] = comboMarked[r][c] = forcedBreak[r][c] = false;
         }
-        remainingMoves = 5;
+        remainingMoves = 3; // fixed default
         score = 0;
         cleaningInProgress = false;
         removalPending = false;
@@ -804,29 +797,14 @@ public:
     int getScore() const { return score; }
     int getRemainingMoves() const { return remainingMoves; }
     bool hasMoves() const { return remainingMoves > 0; }
-    void resetMoves(int n) { remainingMoves = n; }
+    void resetMoves(int n) { remainingMoves = n; } // kept for interface but not used for difficulty
     int getLevel() const { return level; }
     void setLevelPublic(int l) { setLevel(l); } // wrapper pública usada por Game
 
     // Objetivo queries (para UI)
     string getObjectiveDescription() const {
         if (objectiveKind == 1) {
-         
-            if (objectiveTargetFruit == 0) {
-                return "Eliminar " + to_string(objectiveTarget) + " Manzanas";
-            }
-            else if (objectiveTargetFruit == 1) {
-                return "Eliminar " + to_string(objectiveTarget) + " Naranjas";
-            }
-            else if (objectiveTargetFruit == 2) {
-                return "Eliminar " + to_string(objectiveTarget) + " Bananas";
-            }
-            else if (objectiveTargetFruit == 3) {
-                return "Eliminar " + to_string(objectiveTarget) + " Sandias";
-            }
-            else if (objectiveTargetFruit == 4) {
-                return "Eliminar " + to_string(objectiveTarget) + " Uvas";
-            }
+            return "Eliminar " + to_string(objectiveTarget) + " de: tipo " + to_string(objectiveTargetFruit);
         }
         else if (objectiveKind == 2) {
             return "Eliminar " + to_string(objectiveTarget) + " hielos";
@@ -907,9 +885,17 @@ private:
     sf::RectangleShape nextLevelButton;
     sf::Text nextLevelText;
 
-public:
+    // Menu button in Game Over screen
+    sf::RectangleShape menuButton;
+    sf::Text menuButtonText;
+
+    // Track difficulty selection: true == hard selected; false == easy selected
+    bool hardSelected = false;
+
     enum class GameState { MENU, PLAYING, GAME_OVER };
     GameState state = GameState::MENU;
+
+public:
     Game() : board(1) { // start level 1
         sf::View view(sf::FloatRect(0.f, 0.f, 800.f, 600.f));
         window.setView(view);
@@ -1043,6 +1029,26 @@ public:
         nextLevelText.setFillColor(sf::Color::Black);
         nextLevelText.setPosition(nextLevelButton.getPosition().x - 90.f, nextLevelButton.getPosition().y - 12.f);
 
+        // MENU button on Game Over
+        menuButton.setSize(sf::Vector2f(220.f, 60.f));
+        menuButton.setOrigin(menuButton.getSize() / 2.f);
+        menuButton.setPosition(400.f, 200.f);
+        menuButton.setFillColor(sf::Color(200, 200, 255));
+        menuButton.setOutlineThickness(3.f);
+        menuButton.setOutlineColor(sf::Color::Black);
+
+        menuButtonText.setFont(font);
+        menuButtonText.setCharacterSize(22);
+        menuButtonText.setString("MENU PRINCIPAL");
+        menuButtonText.setFillColor(sf::Color::Black);
+        menuButtonText.setPosition(menuButton.getPosition().x - 95.f, menuButton.getPosition().y - 12.f);
+
+        // Default difficulty: FACIL selected
+        hardSelected = false;
+        easyB.setFillColor(sf::Color::Green);
+        hardB.setFillColor(sf::Color(200, 200, 200, 255));
+        board.resetMoves(3); // default moves (no longer changed by difficulty)
+
         window.setFramerateLimit(60);
     }
 
@@ -1066,14 +1072,16 @@ public:
                 if (state == GameState::MENU) {
                     if (playButton.getGlobalBounds().contains(world)) state = GameState::PLAYING;
                     if (easyB.getGlobalBounds().contains(world)) {
+                        // EASY selected (solo visual y flag, no cambio de movimientos)
+                        hardSelected = false;
                         easyB.setFillColor(sf::Color::Green);
                         hardB.setFillColor(sf::Color(200, 200, 200, 255));
-                        board.resetMoves(10);
                     }
                     if (hardB.getGlobalBounds().contains(world)) {
+                        // HARD selected (solo visual y flag)
+                        hardSelected = true;
                         hardB.setFillColor(sf::Color::Green);
                         easyB.setFillColor(sf::Color(200, 200, 200, 255));
-                        board.resetMoves(5);
                     }
                     if (outB.getGlobalBounds().contains(world)) window.close();
                 }
@@ -1093,18 +1101,45 @@ public:
                     }
                 }
                 else if (state == GameState::GAME_OVER) {
+                    // Retry
                     if (retryButton.getGlobalBounds().contains(world)) {
                         board.resetBoard();
                         state = GameState::PLAYING;
+                        return;
                     }
-                    else if (leaveButton.getGlobalBounds().contains(world)) {
+                    // Leave
+                    if (leaveButton.getGlobalBounds().contains(world)) {
                         window.close();
+                        return;
                     }
-                    else if (board.getLevel() < 3 && nextLevelButton.getGlobalBounds().contains(world)) {
-                        int newLevel = board.getLevel() + 1;
-                        board.setLevelPublic(newLevel);
+                    // Menu (vuelve a pantalla principal)
+                    if (menuButton.getGlobalBounds().contains(world)) {
+                        // volver a menu principal, reset level 1, marcar FACIL por defecto
+                        board.setLevelPublic(1);
                         board.resetBoard();
-                        state = GameState::PLAYING;
+                        state = GameState::MENU;
+                        // set difficulty default = easy
+                        hardSelected = false;
+                        easyB.setFillColor(sf::Color::Green);
+                        hardB.setFillColor(sf::Color(200, 200, 200, 255));
+                        board.resetMoves(3);
+                        return;
+                    }
+                    // Next Level: solo visible si level < 3 y además,
+                    // - si hardSelected == false -> funciona siempre
+                    // - si hardSelected == true -> solo si objetivo completado
+                    if (board.getLevel() < 3 && nextLevelButton.getGlobalBounds().contains(world)) {
+                        // if hard selected and objective failed, button is not supposed to be shown/clickable.
+                        bool objectiveComplete = board.isObjectiveComplete();
+                        bool canAdvance = (!hardSelected) || objectiveComplete;
+                        if (canAdvance) {
+                            int newLevel = board.getLevel() + 1;
+                            board.setLevelPublic(newLevel);
+                            board.resetBoard();
+                            state = GameState::PLAYING;
+                            return;
+                        }
+                        // otherwise no action (button hidden when failed in hard)
                     }
                 }
             }
@@ -1175,7 +1210,22 @@ public:
             objProgress.setFont(font);
             objProgress.setCharacterSize(16);
             objProgress.setFillColor(sf::Color::Black);
-            objProgress.setString(board.getObjectiveDescription() + "\n" + board.getObjectiveProgressText());
+
+            string desc = board.getObjectiveDescription();
+            string prog = board.getObjectiveProgressText();
+
+            // Si el jugador escogió FACIL, mostrarlos como "secundario"
+            if (!hardSelected) {
+                if (!desc.empty())
+                    objProgress.setString("(Secundario) " + desc + "\n" + prog);
+                else
+                    objProgress.setString("");
+            }
+            else {
+                // hard: objetivo principal
+                objProgress.setString(desc + "\n" + prog);
+            }
+
             objProgress.setPosition(560.f, 35.f);
 
             window.draw(objTitle);
@@ -1195,10 +1245,49 @@ public:
             window.draw(leaveButton);
             window.draw(leaveButtonText);
 
-            // Si el nivel actual es < 3, mostramos botón next level
+            // menú (siempre visible)
+            window.draw(menuButton);
+            window.draw(menuButtonText);
+
+            bool objectiveComplete = board.isObjectiveComplete();
+            bool objectiveExists = !board.getObjectiveDescription().empty();
+
+            // Mostrar mensaje de objetivo cumplido/fallido
+            sf::Text resultText;
+            resultText.setFont(font);
+            resultText.setCharacterSize(28);
+            resultText.setFillColor(sf::Color::Black);
+            if (objectiveExists) {
+                if (objectiveComplete) {
+                    resultText.setString("OBJETIVO CUMPLIDO");
+                }
+                else {
+                    resultText.setString("OBJETIVO FALLIDO");
+                }
+            }
+            else {
+                resultText.setString(""); // sin objetivo
+            }
+            resultText.setPosition(300.f, 120.f);
+            window.draw(resultText);
+
+            // Si el nivel actual es < 3, mostramos botón next level solo si:
+            // - Si dificultad EASY: siempre (objetivos son secundarios)
+            // - Si dificultad HARD: solo si objetivo completado
             if (board.getLevel() < 3) {
-                window.draw(nextLevelButton);
-                window.draw(nextLevelText);
+                if (!hardSelected) {
+                    // easy: mostrar y permitir avanzar
+                    window.draw(nextLevelButton);
+                    window.draw(nextLevelText);
+                }
+                else {
+                    // hard: mostrar solo si objetivo completado; si falló, NO mostrar
+                    if (objectiveComplete) {
+                        window.draw(nextLevelButton);
+                        window.draw(nextLevelText);
+                    }
+                    // else no dibujar el botón
+                }
             }
 
             // mostrar progreso del objetivo en pantalla final
@@ -1206,9 +1295,17 @@ public:
             objTitle.setFont(font);
             objTitle.setCharacterSize(20);
             objTitle.setFillColor(sf::Color::Black);
-            objTitle.setString("Objetivo cumplido: " + board.getObjectiveProgressText());
-            objTitle.setPosition(260.f, 300.f);
+            objTitle.setString("Objetivo: " + board.getObjectiveDescription());
+            objTitle.setPosition(220.f, 260.f);
             window.draw(objTitle);
+
+            sf::Text objProg;
+            objProg.setFont(font);
+            objProg.setCharacterSize(20);
+            objProg.setFillColor(sf::Color::Black);
+            objProg.setString("Progreso: " + board.getObjectiveProgressText());
+            objProg.setPosition(220.f, 290.f);
+            window.draw(objProg);
 
             sf::Text finalScore;
             finalScore.setFont(font);
@@ -1237,3 +1334,4 @@ int main() {
     g.run();
     return 0;
 }
+
