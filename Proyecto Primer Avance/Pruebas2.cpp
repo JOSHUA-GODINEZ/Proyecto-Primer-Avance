@@ -118,8 +118,8 @@ private:
     vector<sf::Texture> textures;
 
     // layout logical
-    const float originX = 117.f;
-    const float originY = 100.f;
+    const float originX = 121.f;
+    const float originY = 109.f;
     const float cellW = 69.f;
     const float cellH = 60.f;
 
@@ -756,7 +756,7 @@ public:
         for (int r = 0; r < SIZE; ++r) for (int c = 0; c < SIZE; ++c) {
             marked[r][c] = comboMarked[r][c] = forcedBreak[r][c] = false;
         }
-        remainingMoves = 3; // fixed default
+        remainingMoves = 1; // fixed default
         score = 0;
         cleaningInProgress = false;
         removalPending = false;
@@ -804,8 +804,24 @@ public:
     // Objetivo queries (para UI)
     string getObjectiveDescription() const {
         if (objectiveKind == 1) {
-            return "Eliminar " + to_string(objectiveTarget) + " de: tipo " + to_string(objectiveTargetFruit);
+            if (objectiveTargetFruit == 0)
+                return "Eliminar " + to_string(objectiveTarget) + " Manzanas";
+
+            else if (objectiveTargetFruit == 1) {
+                return "Eliminar " + to_string(objectiveTarget) + " Naranjas ";
+            }
+            else if (objectiveTargetFruit == 2) {
+                return "Eliminar " + to_string(objectiveTarget) + " Bananas ";
+            }
+            else if (objectiveTargetFruit == 3) {
+                return "Eliminar " + to_string(objectiveTarget) + " Sandías ";
+            }
+            else if (objectiveTargetFruit == 4) {
+                return "Eliminar " + to_string(objectiveTarget) + " Uvas ";
+            }
         }
+
+
         else if (objectiveKind == 2) {
             return "Eliminar " + to_string(objectiveTarget) + " hielos";
         }
@@ -865,7 +881,7 @@ private:
 
     // timing cleaning
     sf::Clock cleaningClock;
-    sf::Time cleaningDelay = sf::milliseconds(900);
+    sf::Time cleaningDelay = sf::milliseconds(400);
 
     // Menu UI
     sf::RectangleShape playButton;
@@ -919,20 +935,20 @@ public:
         menuSprite.setScale(1.1f, 1.45f);
 
         // score/moves texts
-        scoreText.setFont(font); scoreText.setCharacterSize(20); scoreText.setFillColor(sf::Color::Black); scoreText.setPosition(20.f, 10.f);
-        movesText.setFont(font); movesText.setCharacterSize(20); movesText.setFillColor(sf::Color::Black); movesText.setPosition(300.f, 10.f);
+        scoreText.setFont(font); scoreText.setCharacterSize(20); scoreText.setFillColor(sf::Color::Black); scoreText.setPosition(20.f, 30.f);
+        movesText.setFont(font); movesText.setCharacterSize(20); movesText.setFillColor(sf::Color::Black); movesText.setPosition(10.f, 10.f);
         levelText.setFont(font); levelText.setCharacterSize(20); levelText.setFillColor(sf::Color::Black); levelText.setPosition(520.f, 10.f);
 
         // Menu UI
-        playButton.setSize(sf::Vector2f(200.f, 80.f));
-        playButton.setPosition(300.f, 150.f);
-        playButton.setFillColor(sf::Color::Green);
+        playButton.setSize(sf::Vector2f(250.f, 85.f));
+        playButton.setPosition(280.f, 150.f);
+        playButton.setFillColor(sf::Color(100, 255, 100, 255));
 
         playButtonText.setFont(font);
         playButtonText.setCharacterSize(50);
         playButtonText.setString("JUGAR");
         playButtonText.setFillColor(sf::Color::Black);
-        playButtonText.setPosition(playButton.getPosition().x + 20.f, playButton.getPosition().y + 10.f);
+        playButtonText.setPosition(playButton.getPosition().x + 40.f, playButton.getPosition().y +10);
 
         titleText.setFont(font);
         titleText.setCharacterSize(60);
@@ -972,7 +988,7 @@ public:
 
         outB.setSize(sf::Vector2f(200.f, 55.f));
         outB.setPosition(300.f, 450.f);
-        outB.setFillColor(sf::Color(200, 200, 200, 255));
+        outB.setFillColor(sf::Color(255, 100, 100, 255));
         outB.setOutlineThickness(3.f);
         outB.setOutlineColor(sf::Color::Black);
 
@@ -985,7 +1001,7 @@ public:
         // GAME OVER
         retryButton.setSize(sf::Vector2f(180.f, 60.f));
         retryButton.setOrigin(retryButton.getSize() / 2.f);
-        retryButton.setPosition(400.f, 340.f);
+        retryButton.setPosition(230.f,460.f);
         retryButton.setFillColor(sf::Color(200, 200, 200));
         retryButton.setOutlineThickness(3.f);
         retryButton.setOutlineColor(sf::Color::Black);
@@ -998,8 +1014,8 @@ public:
 
         leaveButton.setSize(sf::Vector2f(180.f, 60.f));
         leaveButton.setOrigin(leaveButton.getSize() / 2.f);
-        leaveButton.setPosition(400.f, 420.f);
-        leaveButton.setFillColor(sf::Color(200, 200, 200));
+        leaveButton.setPosition(570.f, 460.f);
+        leaveButton.setFillColor(sf::Color(255, 100, 100, 255));
         leaveButton.setOutlineThickness(3.f);
         leaveButton.setOutlineColor(sf::Color::Black);
 
@@ -1013,26 +1029,26 @@ public:
         gameOverText.setCharacterSize(44);
         gameOverText.setString("FIN DEL JUEGO");
         gameOverText.setFillColor(sf::Color::Black);
-        gameOverText.setPosition(230.f, 80.f);
+        gameOverText.setPosition(230.f, 30.f);
 
         // NEXT LEVEL button
-        nextLevelButton.setSize(sf::Vector2f(220.f, 60.f));
+        nextLevelButton.setSize(sf::Vector2f(250.f, 80.f));
         nextLevelButton.setOrigin(nextLevelButton.getSize() / 2.f);
-        nextLevelButton.setPosition(400.f, 260.f);
+        nextLevelButton.setPosition(400.f, 270.f);
         nextLevelButton.setFillColor(sf::Color(180, 220, 180));
         nextLevelButton.setOutlineThickness(3.f);
         nextLevelButton.setOutlineColor(sf::Color::Black);
 
         nextLevelText.setFont(font);
-        nextLevelText.setCharacterSize(24);
+        nextLevelText.setCharacterSize(26);
         nextLevelText.setString("SIGUIENTE NIVEL");
         nextLevelText.setFillColor(sf::Color::Black);
-        nextLevelText.setPosition(nextLevelButton.getPosition().x - 90.f, nextLevelButton.getPosition().y - 12.f);
+        nextLevelText.setPosition(nextLevelButton.getPosition().x - 107.f, nextLevelButton.getPosition().y - 18.f);
 
         // MENU button on Game Over
         menuButton.setSize(sf::Vector2f(220.f, 60.f));
         menuButton.setOrigin(menuButton.getSize() / 2.f);
-        menuButton.setPosition(400.f, 200.f);
+        menuButton.setPosition(400.f, 370.f);
         menuButton.setFillColor(sf::Color(200, 200, 255));
         menuButton.setOutlineThickness(3.f);
         menuButton.setOutlineColor(sf::Color::Black);
@@ -1045,9 +1061,9 @@ public:
 
         // Default difficulty: FACIL selected
         hardSelected = false;
-        easyB.setFillColor(sf::Color::Green);
+        easyB.setFillColor(sf::Color(100, 255, 100, 255));
         hardB.setFillColor(sf::Color(200, 200, 200, 255));
-        board.resetMoves(3); // default moves (no longer changed by difficulty)
+        board.resetMoves(1); // default moves (no longer changed by difficulty)
 
         window.setFramerateLimit(60);
     }
@@ -1074,13 +1090,13 @@ public:
                     if (easyB.getGlobalBounds().contains(world)) {
                         // EASY selected (solo visual y flag, no cambio de movimientos)
                         hardSelected = false;
-                        easyB.setFillColor(sf::Color::Green);
+                        easyB.setFillColor(sf::Color(100, 255, 100, 255));
                         hardB.setFillColor(sf::Color(200, 200, 200, 255));
                     }
                     if (hardB.getGlobalBounds().contains(world)) {
                         // HARD selected (solo visual y flag)
                         hardSelected = true;
-                        hardB.setFillColor(sf::Color::Green);
+                        hardB.setFillColor(sf::Color(100, 255, 100, 255));
                         easyB.setFillColor(sf::Color(200, 200, 200, 255));
                     }
                     if (outB.getGlobalBounds().contains(world)) window.close();
@@ -1120,9 +1136,9 @@ public:
                         state = GameState::MENU;
                         // set difficulty default = easy
                         hardSelected = false;
-                        easyB.setFillColor(sf::Color::Green);
+                        easyB.setFillColor(sf::Color(100, 255, 100, 255));
                         hardB.setFillColor(sf::Color(200, 200, 200, 255));
-                        board.resetMoves(3);
+                        board.resetMoves(1);
                         return;
                     }
                     // Next Level: solo visible si level < 3 y además,
@@ -1164,11 +1180,12 @@ public:
             }
 
             scoreText.setString("PUNTUACIÓN: " + to_string(board.getScore()));
-            movesText.setString("MOVIMIENTOS RESTANTES: " + to_string(board.getRemainingMoves()));
-            movesText.setPosition(490.f, 10.f);
+            movesText.setString("MOVIMIENTOS: " + to_string(board.getRemainingMoves()));
+           
 
             levelText.setString("Nivel: " + to_string(board.getLevel()));
-            levelText.setPosition(300.f, 10.f);
+            levelText.setPosition(360.f, 10.f);
+            levelText.setCharacterSize(25);
         }
     }
 
@@ -1205,28 +1222,21 @@ public:
             objTitle.setCharacterSize(18);
             objTitle.setFillColor(sf::Color::Black);
             objTitle.setString("OBJETIVO:");
-            objTitle.setPosition(560.f, 10.f);
+            objTitle.setPosition(650.f, 10.f);
 
             objProgress.setFont(font);
-            objProgress.setCharacterSize(16);
+            objProgress.setCharacterSize(19);
             objProgress.setFillColor(sf::Color::Black);
 
             string desc = board.getObjectiveDescription();
             string prog = board.getObjectiveProgressText();
 
             // Si el jugador escogió FACIL, mostrarlos como "secundario"
-            if (!hardSelected) {
-                if (!desc.empty())
-                    objProgress.setString("(Secundario) " + desc + "\n" + prog);
-                else
-                    objProgress.setString("");
-            }
-            else {
-                // hard: objetivo principal
-                objProgress.setString(desc + "\n" + prog);
-            }
-
-            objProgress.setPosition(560.f, 35.f);
+            
+                    objProgress.setString(" " + desc + "\n" + prog);
+           
+          
+            objProgress.setPosition(605.f, 35.f);
 
             window.draw(objTitle);
             window.draw(objProgress);
@@ -1255,7 +1265,7 @@ public:
             // Mostrar mensaje de objetivo cumplido/fallido
             sf::Text resultText;
             resultText.setFont(font);
-            resultText.setCharacterSize(28);
+            resultText.setCharacterSize(25);
             resultText.setFillColor(sf::Color::Black);
             if (objectiveExists) {
                 if (objectiveComplete) {
@@ -1268,7 +1278,7 @@ public:
             else {
                 resultText.setString(""); // sin objetivo
             }
-            resultText.setPosition(300.f, 120.f);
+            resultText.setPosition(110.f, 140.f);
             window.draw(resultText);
 
             // Si el nivel actual es < 3, mostramos botón next level solo si:
@@ -1293,26 +1303,26 @@ public:
             // mostrar progreso del objetivo en pantalla final
             sf::Text objTitle;
             objTitle.setFont(font);
-            objTitle.setCharacterSize(20);
+            objTitle.setCharacterSize(23);
             objTitle.setFillColor(sf::Color::Black);
-            objTitle.setString("Objetivo: " + board.getObjectiveDescription());
-            objTitle.setPosition(220.f, 260.f);
+            objTitle.setString("" + board.getObjectiveDescription());
+            objTitle.setPosition(420.f, 140.f);
             window.draw(objTitle);
 
             sf::Text objProg;
             objProg.setFont(font);
-            objProg.setCharacterSize(20);
+            objProg.setCharacterSize(25);
             objProg.setFillColor(sf::Color::Black);
-            objProg.setString("Progreso: " + board.getObjectiveProgressText());
-            objProg.setPosition(220.f, 290.f);
+            objProg.setString("Obtuviste: " + board.getObjectiveProgressText());
+            objProg.setPosition(313.f, 183.f);
             window.draw(objProg);
 
             sf::Text finalScore;
             finalScore.setFont(font);
-            finalScore.setCharacterSize(28);
-            finalScore.setString("Final Score: " + to_string(board.getScore()));
+            finalScore.setCharacterSize(25);
+            finalScore.setString("Puntaje Final: " + to_string(board.getScore()));
             finalScore.setFillColor(sf::Color::Black);
-            finalScore.setPosition(300.f, 200.f);
+            finalScore.setPosition(305.f, 90.f);
             window.draw(finalScore);
         }
 
