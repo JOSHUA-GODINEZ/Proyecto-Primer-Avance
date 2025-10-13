@@ -94,7 +94,7 @@ private:
     bool removalPending = false;
 
     const float MARK_SCALE = 1.35f;
-    const float SELECT_SCALE = 1.35f;
+    const float SELECT_SCALE = 1.f;
 
     int selectedRow = -1;
     int selectedCol = -1;
