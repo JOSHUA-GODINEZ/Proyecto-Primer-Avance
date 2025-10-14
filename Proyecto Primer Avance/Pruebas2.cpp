@@ -535,22 +535,28 @@ public:
     }
 
     bool detectCombinationsWithoutRemoving() {
-        // horizontals
+        // horizontals (IGNORAR ICE_INDEX)
         for (int r = 0; r < SIZE; ++r) {
             int count = 1;
             for (int c = 1; c < SIZE; ++c) {
-                if (matrix[r][c] && matrix[r][c - 1] && matrix[r][c]->getType() == matrix[r][c - 1]->getType()) {
+                if (matrix[r][c] && matrix[r][c - 1]
+                    && matrix[r][c]->getType() != ICE_INDEX
+                    && matrix[r][c - 1]->getType() != ICE_INDEX
+                    && matrix[r][c]->getType() == matrix[r][c - 1]->getType()) {
                     ++count;
                     if (count >= 3) return true;
                 }
                 else count = 1;
             }
         }
-        // verticals
+        // verticals (IGNORAR ICE_INDEX)
         for (int c = 0; c < SIZE; ++c) {
             int count = 1;
             for (int r = 1; r < SIZE; ++r) {
-                if (matrix[r][c] && matrix[r - 1][c] && matrix[r][c]->getType() == matrix[r - 1][c]->getType()) {
+                if (matrix[r][c] && matrix[r - 1][c]
+                    && matrix[r][c]->getType() != ICE_INDEX
+                    && matrix[r - 1][c]->getType() != ICE_INDEX
+                    && matrix[r][c]->getType() == matrix[r - 1][c]->getType()) {
                     ++count;
                     if (count >= 3) return true;
                 }
@@ -560,16 +566,23 @@ public:
         return false;
     }
 
+
     bool formsCombinationWhenSwapping(int r1, int c1, int r2, int c2) {
         Fruit* tmp = matrix[r1][c1];
         matrix[r1][c1] = matrix[r2][c2];
         matrix[r2][c2] = tmp;
+
+        // Usamos la función de detección que ya IGNORA hielo.
         bool has = detectCombinationsWithoutRemoving();
+
+        // Restaurar
         tmp = matrix[r1][c1];
         matrix[r1][c1] = matrix[r2][c2];
         matrix[r2][c2] = tmp;
+
         return has;
     }
+
 
     // clear combos once; two modes: initialization (countScore==false) or game (true)
     bool clearCombosOnce(bool countScore) {
@@ -644,8 +657,7 @@ public:
             bool comboLocal[SIZE][SIZE] = { false };
 
             // -----------------------------------
-            // Horizontales
-            // -----------------------------------
+          // horizontals (robusto para hielo)
             for (int r = 0; r < SIZE; ++r) {
                 int c = 0;
                 while (c < SIZE) {
@@ -656,41 +668,61 @@ public:
                     int run = k - c;
 
                     if (run >= 3) {
-                        // Marcar frutas para eliminar
-                        for (int s = c; s < k; ++s) {
-                            int cellType = matrix[r][s]->getType();
-                            bool wasSwapped = (r == lastSwapR1 && s == lastSwapC1) || (r == lastSwapR2 && s == lastSwapC2);
+                        // Si el tipo es ICE_INDEX: procesamos SOLO si el run contiene
+                        // al menos una celda que fue parte del último swap (wasSwapped).
+                        bool runIsIce = (t == ICE_INDEX);
+                        bool runContainsSwapped = false;
+                        if (runIsIce) {
+                            for (int s = c; s < k; ++s) {
+                                if ((r == lastSwapR1 && s == lastSwapC1) || (r == lastSwapR2 && s == lastSwapC2)) {
+                                    runContainsSwapped = true;
+                                    break;
+                                }
+                            }
+                        }
 
-                            if (cellType == ICE_INDEX) {
-                                if (wasSwapped) {
+                        // marcar las celdas del run según reglas (si es hielo y no contiene swapped -> ignorar)
+                        if (!runIsIce || runContainsSwapped) {
+                            for (int s = c; s < k; ++s) {
+                                int cellType = matrix[r][s]->getType();
+                                bool wasSwapped = (r == lastSwapR1 && s == lastSwapC1) || (r == lastSwapR2 && s == lastSwapC2);
+
+                                if (cellType == ICE_INDEX) {
+                                    // solo marcar hielo si vino del swap (o si el run contiene swapped — ya garantizado arriba)
+                                    if (wasSwapped) {
+                                        markedLocal[r][s] = true;
+                                        comboLocal[r][s] = true;
+                                        anyRemoval = true;
+                                    }
+                                    // si no fue swapped y runIsIce==true pero runContainsSwapped==true,
+                                    // la marcación anterior con wasSwapped cubrirá los que forman parte del swap;
+                                    // los otros hielos del run NO se marcan (porque queremos que se rompa sólo el hielo movido).
+                                }
+                                else {
+                                    // fruta normal / bomba -> marcar normalmente
                                     markedLocal[r][s] = true;
                                     comboLocal[r][s] = true;
                                     anyRemoval = true;
                                 }
                             }
-                            else {
-                                markedLocal[r][s] = true;
-                                comboLocal[r][s] = true;
-                                anyRemoval = true;
-                            }
                         }
 
-                        // -----------------------------
-                        // Super-fruta: horizontal → fila r, columna central del run
-                        // -----------------------------
                         if (run >= 4) {
                             super = t; // guarda el tipo de fruta
                             superR = r;
                             superC = c + (run - 1) / 2; // columna central (si par, toma el de la izquierda)
                         }
+
                     }
                     c = k;
                 }
             }
 
+
             // -----------------------------------
             // Verticales
             // -----------------------------------
+     // verticals (robusto para hielo)
             for (int c = 0; c < SIZE; ++c) {
                 int r = 0;
                 while (r < SIZE) {
@@ -701,37 +733,48 @@ public:
                     int run = k - r;
 
                     if (run >= 3) {
-                        for (int s = r; s < k; ++s) {
-                            int cellType = matrix[s][c]->getType();
-                            bool wasSwapped = (s == lastSwapR1 && c == lastSwapC1) || (s == lastSwapR2 && c == lastSwapC2);
+                        bool runIsIce = (t == ICE_INDEX);
+                        bool runContainsSwapped = false;
+                        if (runIsIce) {
+                            for (int s = r; s < k; ++s) {
+                                if ((s == lastSwapR1 && c == lastSwapC1) || (s == lastSwapR2 && c == lastSwapC2)) {
+                                    runContainsSwapped = true;
+                                    break;
+                                }
+                            }
+                        }
 
-                            if (cellType == ICE_INDEX) {
-                                if (wasSwapped) {
+                        if (!runIsIce || runContainsSwapped) {
+                            for (int s = r; s < k; ++s) {
+                                int cellType = matrix[s][c]->getType();
+                                bool wasSwapped = (s == lastSwapR1 && c == lastSwapC1) || (s == lastSwapR2 && c == lastSwapC2);
+
+                                if (cellType == ICE_INDEX) {
+                                    if (wasSwapped) {
+                                        markedLocal[s][c] = true;
+                                        comboLocal[s][c] = true;
+                                        anyRemoval = true;
+                                    }
+                                }
+                                else {
                                     markedLocal[s][c] = true;
                                     comboLocal[s][c] = true;
                                     anyRemoval = true;
                                 }
                             }
-                            else {
-                                markedLocal[s][c] = true;
-                                comboLocal[s][c] = true;
-                                anyRemoval = true;
-                            }
                         }
 
-                        // -----------------------------
-                        // Super-fruta: vertical → columna c, fila más baja del run
-                        // -----------------------------
+
                         if (run >= 4) {
                             super = t; // guarda el tipo de fruta
                             superR = r + run - 1; // fila más baja
                             superC = c;
                         }
+
+
                     }
                     r = k;
-
                 }
-
             }
 
 
@@ -767,7 +810,7 @@ public:
                             //  matrix[r][c]->startMoveTo(200, 100, 100.f);
 
 
-                            matrix[r][c]->startPop(300.f, MARK_SCALE); // ejemplo: 220ms hasta MARK_SCALE
+                            matrix[r][c]->startPop(250.f, MARK_SCALE); // ejemplo: 220ms hasta MARK_SCALE
 
 
 
@@ -1111,7 +1154,7 @@ public:
                                 for (int cc = 0; cc < SIZE; ++cc) {
                                     if (marked[rr][cc] && matrix[rr][cc]) {
                                         // startPop es idempotente (no reinicia si ya está animando)
-                                        matrix[rr][cc]->startPop(200, 1.6f);
+                                        matrix[rr][cc]->startPop(250, 1.6f);
                                     }
                                 }
                             }
@@ -1161,6 +1204,11 @@ public:
         if (r1 < 0 || r1 >= SIZE || c1 < 0 || c1 >= SIZE || r2 < 0 || r2 >= SIZE || c2 < 0 || c2 >= SIZE) return false;
         int dr = abs(r1 - r2), dc = abs(c1 - c2);
         if (!((dr == 1 && dc == 0) || (dr == 0 && dc == 1))) return false;
+
+        if (matrix[r1][c1] && matrix[r2][c2] &&
+            matrix[r1][c1]->getType() == ICE_INDEX && matrix[r2][c2]->getType() == ICE_INDEX) {
+            return false;
+        }
 
         if (!formsCombinationWhenSwapping(r1, c1, r2, c2)) return false;
 
@@ -1227,7 +1275,7 @@ public:
             BombFruit* asBomb = dynamic_cast<BombFruit*>(matrix[row][col]);
             if (asBomb != nullptr) {
                 // 1. iniciar animación pop
-                matrix[row][col]->startPop(200.f, MARK_SCALE);
+                matrix[row][col]->startPop(250.f, MARK_SCALE);
 
 
 
@@ -1256,7 +1304,7 @@ public:
                             // start pop solo si la celda fue marcada por la detonacion
                             // (markCellForRemoval ya fue llamado por onMatch)
                             // para evitar duplicados, startPop debe ser idempotente (interna lo ignora si ya popActive)
-                            matrix[nr][nc]->startPop(300.f, MARK_SCALE);
+                            matrix[nr][nc]->startPop(250.f, MARK_SCALE);
 
                         }
                     }
@@ -1486,6 +1534,14 @@ private:
     sf::Clock cleaningClock;
     sf::Time cleaningDelay = sf::milliseconds(800);
 
+  
+
+   
+
+
+
+
+
     // Menu UI
     sf::RectangleShape playButton;
     sf::Text playButtonText;
@@ -1666,9 +1722,11 @@ public:
         hardSelected = false;
         easyB.setFillColor(sf::Color(100, 255, 100, 255));
         hardB.setFillColor(sf::Color(200, 200, 200, 255));
-        board.resetMoves(50); // default moves (no longer changed by difficulty)
+        board.resetMoves(3); // default moves (no longer changed by difficulty)
 
         window.setFramerateLimit(60);
+
+
     }
 
     void processEvents() {
