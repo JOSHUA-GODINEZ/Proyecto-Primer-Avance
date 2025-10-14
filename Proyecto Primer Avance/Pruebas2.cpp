@@ -13,7 +13,7 @@ class Board; // forward
 
 class Fruit {
 protected:
-
+    bool pendingProcessed = false;
     bool popActive = false;
     float popElapsedMs = 0.f;
     float popDurationMs = 220.f;   // duración total de la animación
@@ -111,7 +111,7 @@ public:
 
 
     bool isPendingRemoval() const { return pendingRemoval; }
-
+    void markPendingProcessed() { pendingProcessed = true; }
 
     void animatePop() {
         float startScale = 1.0f;    // escala inicial
@@ -733,7 +733,7 @@ public:
                 }
 
             }
-        
+
 
 
             // if there was a combo and last swapped cells are ice, mark them too (case: swap ice -> combo elsewhere)
@@ -751,7 +751,7 @@ public:
                         if (matrix[lastSwapR2][lastSwapC2] && matrix[lastSwapR2][lastSwapC2]->getType() == ICE_INDEX) {
                             markedLocal[lastSwapR2][lastSwapC2] = true;
                             comboLocal[lastSwapR2][lastSwapC2] = true;
-                          
+
                         }
                     }
                 }
@@ -763,13 +763,13 @@ public:
                         marked[r][c] = markedLocal[r][c];
                         comboMarked[r][c] = comboLocal[r][c];
                         if (marked[r][c] && matrix[r][c]) {
-                       
-                          //  matrix[r][c]->startMoveTo(200, 100, 100.f);
-                       
 
-                            matrix[r][c]->startPop(500.f, MARK_SCALE); // ejemplo: 220ms hasta MARK_SCALE
+                            //  matrix[r][c]->startMoveTo(200, 100, 100.f);
 
-                            
+
+                            matrix[r][c]->startPop(300.f, MARK_SCALE); // ejemplo: 220ms hasta MARK_SCALE
+
+
 
                         }
                     }
@@ -795,77 +795,80 @@ public:
                             processed[r][c] = true;
                             continue;
                         }
-                        // call onMatch (bomb will mark neighbors etc)
-                    
-                        matrix[r][c]->onMatch(this, r, c);
-                        processed[r][c] = true;
-                        progress = true;
+                        else {
+                            // call onMatch (bomb will mark neighbors etc)
+                            matrix[r][c]->onMatch(this, r, c);
+                            //  matrix[r][c]->onMatch(this, r, c);
+                            processed[r][c] = true;
+                            progress = true;
+                        }
                     }
                 }
-            }
 
-            // delete marked cells but respect ice rules (only delete ice if comboMarked or forcedBreak)
-           // DELETE / REPLACE marked cells but respect ice rules
-// MARCADO -> iniciar animación (no borrar inmediatamente)
-            // DELETE / REPLACE marked cells but respect ice rules
-            for (int r = 0; r < SIZE; ++r) {
-                for (int c = 0; c < SIZE; ++c) {
-                    if (!marked[r][c] || !matrix[r][c]) continue;
 
-                    bool isIce = (matrix[r][c]->getType() == ICE_INDEX);
-                    if (isIce && !comboMarked[r][c] && !forcedBreak[r][c]) {
-                        // no se elimina este hielo (no fue combo ni forced)
-                        continue;
-                    }
+                // delete marked cells but respect ice rules (only delete ice if comboMarked or forcedBreak)
+               // DELETE / REPLACE marked cells but respect ice rules
+    // MARCADO -> iniciar animación (no borrar inmediatamente)
+                // DELETE / REPLACE marked cells but respect ice rules
+                for (int r = 0; r < SIZE; ++r) {
+                    for (int c = 0; c < SIZE; ++c) {
+                        if (!marked[r][c] || !matrix[r][c]) continue;
 
-                    // Si esta celda es la posición objetivo de la SUPER y hay un super pendiente:
-                    if (super >= 0 && super <= 4 && r == superR && c == superC) {
-                        // reemplazamos la fruta por la super-fruta INMEDIATAMENTE
-                        // (no contamos puntos por esta celda; es la nueva super)
+                        bool isIce = (matrix[r][c]->getType() == ICE_INDEX);
+                        if (isIce && !comboMarked[r][c] && !forcedBreak[r][c]) {
+                            // no se elimina este hielo (no fue combo ni forced)
+                            continue;
+                        }
+
+                        // Si esta celda es la posición objetivo de la SUPER y hay un super pendiente:
+                        if (super >= 0 && super <= 4 && r == superR && c == superC) {
+                            // reemplazamos la fruta por la super-fruta INMEDIATAMENTE
+                            // (no contamos puntos por esta celda; es la nueva super)
+                            delete matrix[r][c];
+                            matrix[r][c] = new SuperFruit(textures[7 + super], cellCenter(r, c), super);
+
+                            // opcional: ajustar visual (por ejemplo, destacar)
+                            matrix[r][c]->resetVisual();
+
+                            // consumimos el super y reseteamos la posición objetivo
+                            super = -1;
+                            superR = superC = -1;
+
+                            // no marcamos anyRemoval por esta celda (porque no fue realmente removida)
+                            // (si quieres que la creación de la super cuente como un "evento" podrías setear anyRemoval=true)
+                            continue;
+                        }
+
+                        // Caso normal: actualizar objetivo y eliminar la fruta
+                        incrementObjectiveOnDelete(matrix[r][c]->getType());
+
+                        // eliminar y contar puntos
                         delete matrix[r][c];
-                        matrix[r][c] = new SuperFruit(textures[7 + super], cellCenter(r, c), super);
+                        matrix[r][c] = nullptr;
+                        anyRemoval = true;
+                        score += 10;
 
-                        // opcional: ajustar visual (por ejemplo, destacar)
-                        matrix[r][c]->resetVisual();
-
-                        // consumimos el super y reseteamos la posición objetivo
-                        super = -1;
-                        superR = superC = -1;
-
-                        // no marcamos anyRemoval por esta celda (porque no fue realmente removida)
-                        // (si quieres que la creación de la super cuente como un "evento" podrías setear anyRemoval=true)
-                        continue;
+                        if (objectiveKind == 3) objectiveProgress = score;
                     }
-
-                    // Caso normal: actualizar objetivo y eliminar la fruta
-                    incrementObjectiveOnDelete(matrix[r][c]->getType());
-
-                    // eliminar y contar puntos
-                    delete matrix[r][c];
-                    matrix[r][c] = nullptr;
-                    anyRemoval = true;
-                    score += 10;
-
-                    if (objectiveKind == 3) objectiveProgress = score;
                 }
+
+
+
+
+                // reset flags and visuals
+                for (int r = 0; r < SIZE; ++r) for (int c = 0; c < SIZE; ++c) {
+                    marked[r][c] = comboMarked[r][c] = forcedBreak[r][c] = false;
+                    if (matrix[r][c]) matrix[r][c]->resetVisual();
+                }
+
+                // reset last swap (applies only to that swap)
+                lastSwapR1 = lastSwapC1 = lastSwapR2 = lastSwapC2 = -1;
+                removalPending = false;
+
+                // start gravity animation to refill board (instead of instant drop)
+                applyGravityAndReplace();
+                return anyRemoval;
             }
-
-
-
-
-            // reset flags and visuals
-            for (int r = 0; r < SIZE; ++r) for (int c = 0; c < SIZE; ++c) {
-                marked[r][c] = comboMarked[r][c] = forcedBreak[r][c] = false;
-                if (matrix[r][c]) matrix[r][c]->resetVisual();
-            }
-
-            // reset last swap (applies only to that swap)
-            lastSwapR1 = lastSwapC1 = lastSwapR2 = lastSwapC2 = -1;
-            removalPending = false;
-
-            // start gravity animation to refill board (instead of instant drop)
-            applyGravityAndReplace();
-            return anyRemoval;
         }
     }
 
@@ -892,8 +895,8 @@ public:
                 sf::Vector2f dummy = { 0.f, 0.f };
 
                 // Priorizar creación de "super" si hay uno pendiete (super == 0..4)
-              
-                 if (roll < refillBombChance[level]) {
+
+                if (roll < refillBombChance[level]) {
                     finalMatrix[r][c] = createFruitByType(BOMB_INDEX, textures[BOMB_INDEX], dummy);
                 }
                 else {
@@ -958,8 +961,8 @@ public:
     int getSuperCount() const { return super; }
     // Public helpers for SuperFruit actions
  // en Board (public)
-int getSize() const { return SIZE; }
-int getTypeAt(int r, int c) const;
+    int getSize() const { return SIZE; }
+    int getTypeAt(int r, int c) const;
 
 
 
@@ -988,7 +991,7 @@ int getTypeAt(int r, int c) const;
                 }
             }
             // Si hay un super pendiente, forzamos su creación en la celda objetivo
-          
+
 
         }
         // Set pixel positions to targets (center) so sprites look correct
@@ -1080,63 +1083,74 @@ int getTypeAt(int r, int c) const;
 
 
     void updateAnimations() {
-        // delta desde la última llamada en ms
         float deltaMs = animClock.restart().asMilliseconds();
-
         bool anyMoving = false;
-        // Actualiza movimiento (gravedad / swap) si aplicas
+
         for (int r = 0; r < SIZE; ++r) {
             for (int c = 0; c < SIZE; ++c) {
-                if (matrix[r][c]) {
-                    // updateMove existente
-                    matrix[r][c]->updateMove();
-                    if (matrix[r][c]->isMoving()) anyMoving = true;
+                if (!matrix[r][c]) continue;
 
-                    // actualizar animación pop si activa
-                    if (matrix[r][c]->isPopActive()) {
-                        bool finished = matrix[r][c]->updatePop(deltaMs);
-                        // NO borramos aquí (tú controlas la eliminación). 
-                        // Si quieres reaccionar a la finalización, puedes comprobar 'finished' y guardar coords.
-                        //(void)finished; // evitar warning si no lo usás ahora
-                    }
-               
-                    else if (matrix[r][c] && matrix[r][c]->isPendingRemoval()) {
-                        // Animación completada, ahora aplicamos efectos de la bomba
+                // 1) mover (swap / gravity) si aplica
+                matrix[r][c]->updateMove();
+                if (matrix[r][c]->isMoving()) anyMoving = true;
+
+                // 2) animación pop
+                if (matrix[r][c]->isPopActive()) {
+                    bool finished = matrix[r][c]->updatePop(deltaMs);
+                    if (finished) {
+                        // Si es bomba: detonar AHORA (marca vecinos y su celda).
+                        // (IMPORTANTE: clearCombosOnce debe NO volver a ejecutar onMatch si ya lo hacemos aquí.)
                         if (BombFruit* b = dynamic_cast<BombFruit*>(matrix[r][c])) {
-                            markCellForRemoval(r, c, true);   // marcamos su celda y vecinos
-                            b->onMatch(this, r, c);           // detona bomba
+                            b->onMatch(this, r, c); // marca vecinos en marked[][] y forcedBreak si corresponde
+                            // Asegurar que la propia celda también queda marcada:
+                            markCellForRemoval(r, c, true);
+
+                            // Inicia animación visual en todas las celdas marcadas (vecinos y centro).
+                            // Esto asegura que el jugador vea la pop en las frutas que van a eliminarse.
+                            for (int rr = 0; rr < SIZE; ++rr) {
+                                for (int cc = 0; cc < SIZE; ++cc) {
+                                    if (marked[rr][cc] && matrix[rr][cc]) {
+                                        // startPop es idempotente (no reinicia si ya está animando)
+                                        matrix[rr][cc]->startPop(200, 1.6f);
+                                    }
+                                }
+                            }
+
+                            // Finalmente lanzamos la limpieza de una vez para que las frutas marcadas
+                            // se eliminen sin requerir más clicks o movimientos.
+                            startCleaning(true);
+
+                            // Opcional: si quieres borrar la bomba inmediatamente tras detonar,
+                            // podrías delete matrix[r][c]; matrix[r][c] = nullptr;
+                            // pero dejar que clearCombosOnce haga el borrado mantiene el flujo consistente.
                         }
-                         // eliminar fruta
-                      
+                        else {
+                            // Si no es bomba: cuando termina su pop, simplemente marcar para limpieza
+                            // para que clearCombosOnce elimine la celda (si no se había marcado ya).
+                            // (Si ya estaba marcada, markCellForRemoval es idempotente.)
+                            markCellForRemoval(r, c, false);
+                            // y lanzar limpieza
+                            startCleaning(true);
+                        }
                     }
-                
-
-
                 }
+                // (no hacemos nada extra si no está popActive)
             }
         }
 
+        // lógica anterior de movimiento / gravedad / swap
         if (!anyMoving) {
-            // if gravity was animating, stop it
             if (gravityAnimating) gravityAnimating = false;
 
-            // if swap animating just finished, trigger cleaning
             if (swapAnimating) {
                 swapAnimating = false;
                 if (pendingSwapCleaning) {
                     pendingSwapCleaning = false;
-                    // we start cleaning phase now that swap animation ended
                     startCleaning(true);
                 }
             }
         }
-        // comportamiento previo con gravityAnimating / swapAnimating no cambia
-        // por ejemplo:
-        if (!anyMoving) gravityAnimating = false;
     }
-
-
-
 
 
 
@@ -1214,14 +1228,23 @@ int getTypeAt(int r, int c) const;
             if (asBomb != nullptr) {
                 // 1. iniciar animación pop
                 matrix[row][col]->startPop(200.f, MARK_SCALE);
+
+
+
+                //  sf::sleep(sf::milliseconds(1000));
+
+
+
+
                 removalPending = true;
                 startCleaning(true);
                 // 2. detonar la bomba (efecto)
-          
 
+                //markCellForRemoval(row, col, true);   // marcamos su celda y vecinos
+               // asBomb->onMatch(this, row, col);
                 // 3. marcar para limpieza
-               
-          
+              //  matrix[row][col] = nullptr;
+
 
 
 
@@ -1234,18 +1257,19 @@ int getTypeAt(int r, int c) const;
                             // (markCellForRemoval ya fue llamado por onMatch)
                             // para evitar duplicados, startPop debe ser idempotente (interna lo ignora si ya popActive)
                             matrix[nr][nc]->startPop(300.f, MARK_SCALE);
+
                         }
                     }
                 }
 
-              
+
 
                 // 4. iniciar limpieza (pero deja que updatePop corra al menos un frame)
-          
+
 
                 return;
             }
-           
+
             selectedRow = row; selectedCol = col;
             matrix[selectedRow][selectedCol]->setScale(SELECT_SCALE, SELECT_SCALE);
             return;
@@ -1380,13 +1404,12 @@ int getTypeAt(int r, int c) const;
 
 // ---------------------- BombFruit onMatch implementation ----------------------
 void BombFruit::onMatch(Board* board, int row, int col) {
-    // mark neighbors and force ice break
-    for (int dr = -1; dr <= 1; ++dr) {
+      for (int dr = -1; dr <= 1; ++dr) {
         for (int dc = -1; dc <= 1; ++dc) {
             if (dr == 0 && dc == 0) continue;
             int nr = row + dr;
             int nc = col + dc;
-            board->markCellForRemoval(nr, nc, true);
+            board->markCellForRemoval(nr, nc, true); // forceBreak = true
         }
     }
 }
