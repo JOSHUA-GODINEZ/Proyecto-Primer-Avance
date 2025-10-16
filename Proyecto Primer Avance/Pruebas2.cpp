@@ -13,35 +13,12 @@ class Board; // forward
 
 class Fruit {
 protected:
-    bool pendingProcessed = false;
     bool popActive = false;
     float popElapsedMs = 0.f;
     float popDurationMs = 220.f;   // duración total de la animación
     float popStartScale = 1.f;
     float popTargetScale = 1.35f;  // MARK_SCALE o lo que quieras
     bool pendingRemoval = false;
-
-  //  bool popping = false;       // indica si está en animación pop
-    sf::Clock popClock;
-   // float popDuration = 200.f;  // duración total de la animación en ms
-    float startScale = 1.f;     // escala inicial
-    float maxScale = 1.5f;      // escala máxima antes de eliminar
-
-
-
-    bool removalGrowing = false;
-    sf::Clock removalClock;
-    float removalDurationMs = 220.f; // duración de la animación de grow (ms)
-    float removalStartScale = 1.f;
-    float removalTargetScale = 1.6f; // escala máxima antes de borrar
-    bool removalFade = false; // false si no quieres fade, true para fade out
-    bool removalFinishedFlag = false; // indica que la animación acabó
-
-   
-    float popDuration = 200.f; // duración total en ms
-    float popElapsed = 0.f;
-    float popMaxScale = 1.5f;
-    float originalScale = 1.f;
 
     sf::Sprite sprite;
     int type;
@@ -53,16 +30,8 @@ protected:
     sf::Clock moveClock;
     bool moving = false;
 
-
-
-
-
-
-    float currentScale = 1.f;     // escala actual
-    float targetScale = 2.f;      // escala máxima deseada
-    float scaleStep = 0.05f;      // cuánto aumenta por frame
+    float currentScale = 1.f;    
     bool popping = false;
-
 public:
     Fruit() : type(-1) {}
     Fruit(sf::Texture& texture, sf::Vector2f pixelCenter, int fruitType) : type(fruitType) {
@@ -109,27 +78,6 @@ public:
         }
     }
 
-
-    bool isPendingRemoval() const { return pendingRemoval; }
-    void markPendingProcessed() { pendingProcessed = true; }
-
-    void animatePop() {
-        float startScale = 1.0f;    // escala inicial
-        float endScale = 1.8f;      // escala máxima
-        float step = 0.01f;         // velocidad del crecimiento (más pequeño = más lento)
-      
-        for (float s = startScale; s <= endScale; s += step) {
-            setScale(s, s);
-            // pausa breve para suavizar la animación
-          
-        }
-      
-        
-    }
-
-    // Inicia la animación pop (no bloqueante)
-   // duration_ms: duración total en milisegundos
-   // targetScale: escala final alcanzada al completar la animación
     void startPop(float duration_ms = 220.f, float targetScale = 1.5f) {
         popActive = true;
         popElapsedMs = 0.f;
@@ -139,8 +87,6 @@ public:
         pendingRemoval = true;
     }
 
-    // Llamar cada frame con delta en ms.
-    // Devuelve true si la animación terminó en este frame (alcanzó target).
     bool updatePop(float deltaMs) {
         if (!popActive) return false;
         popElapsedMs += deltaMs;
@@ -161,73 +107,9 @@ public:
 
     bool isPopActive() const { return popActive; }
 
-    // Opcional: detener prematuramente y restaurar escala original
-    void stopPop(bool restore = true) {
-        popActive = false;
-        if (restore) sprite.setScale(popStartScale, popStartScale);
-    }
-
-
-
-
-
-    // Iniciar la animación de "grow then delete"
-    void startGrowRemoval(float duration_ms = 220.f, float targetScale = 1.6f, bool fade = false) {
-        if (removalGrowing) return; // ya en proceso
-        removalGrowing = true;
-        removalFinishedFlag = false;
-        removalDurationMs = duration_ms;
-        removalTargetScale = targetScale;
-        removalFade = fade;
-        removalClock.restart();
-
-        // tomar la escala actual como inicio (puede ser SELECT_SCALE o MARK_SCALE)
-        sf::Vector2f sc = sprite.getScale();
-        removalStartScale = sc.x; // asumimos sx==sy
-    }
-
-    // Llamar cada frame para actualizar la animación
-    void updateRemovalGrow() {
-        if (!removalGrowing) return;
-        float elapsed = removalClock.getElapsedTime().asMilliseconds();
-        float t = elapsed / removalDurationMs;
-        if (t >= 1.f) {
-            // acabado: fijar escala objetivo y marcar terminado
-            sprite.setScale(removalTargetScale, removalTargetScale);
-            removalGrowing = false;
-            removalFinishedFlag = true;
-            // si quieres fade al final, lo podrías aplicar aquí
-            if (removalFade) {
-                sf::Color c = sprite.getColor();
-                c.a = 0;
-                sprite.setColor(c);
-            }
-            return;
-        }
-        // easing (ease-out quad) para que el crecimiento sea más natural
-        float e = 1.f - (1.f - t) * (1.f - t);
-        float scale = removalStartScale + (removalTargetScale - removalStartScale) * e;
-        sprite.setScale(scale, scale);
-
-        // opcional: fade progresivo (si removalFade==true)
-        if (removalFade) {
-            float alpha = 255.f * (1.f - e);
-            sf::Color c = sprite.getColor();
-            c.a = static_cast<sf::Uint8>(std::max(0.f, std::min(255.f, alpha)));
-            sprite.setColor(c);
-        }
-    }
-
-    bool isRemovalGrowing() const { return removalGrowing; }
-    bool removalFinished() const { return removalFinishedFlag; }
-
     bool isMoving() const { return moving; }
 
-    sf::Vector2f getHalfSize() const {
-        sf::FloatRect b = sprite.getLocalBounds();
-        return { b.width / 2.f, b.height / 2.f };
-    }
-
+ 
     int getType() const { return type; }
     void setType(int t) { type = t; }
 
@@ -235,75 +117,13 @@ public:
 
     void resetVisual() { sprite.setScale(1.f, 1.f); }
 
-
-    void startPopRemoval(float duration_ms, float max_scale) {
-        popping = true;
-        popDuration = duration_ms;
-        popElapsed = 0.f;
-        popMaxScale = max_scale;
-        originalScale =1.5f ; // asumimos escala X=Y
-        setScale(originalScale, originalScale); // reinicia escala
-    }
-    bool updatePopRemoval1() {
-        if (!popping) return false;
-        float t = popClock.getElapsedTime().asMilliseconds() / popDuration;
-        if (t >= 1.f) {
-            popping = false;  // terminó la animación
-            return true;      // indica que se debe eliminar
-        }
-
-        // easing (ease-out quad)
-        float e = 1.f - (1.f - t) * (1.f - t);
-        float currentScale = startScale + (maxScale - startScale) * e;
-        sprite.setScale(currentScale, currentScale);
-        return false; // aún no eliminar
-    }
-    // Llamar cada frame
-    // dt_ms es tiempo transcurrido desde el último frame (puedes calcularlo con sf::Clock)
-    bool updatePopRemoval(float dt_ms) {
-        if (!popping) return false;
-
-        popElapsed += dt_ms;
-        float t = popElapsed / popDuration;
-        if (t > 1.f) t = 1.f;
-
-        // interpolación lineal entre originalScale y popMaxScale
-        float newScale = originalScale + (popMaxScale - originalScale) * t;
-        setScale(newScale, newScale);
-
-        if (t >= 1.f) {
-            popping = false;
-            return true; // indica que la animación terminó y puede eliminarse
-        }
-        return false;
-    }
-
-
-
-    void startPop() {
-        popping = true;
-        currentScale = 1.f;
-        setScale(currentScale, currentScale);
-    }
-
-    void updatePopAnimation() {
-        if (!popping) return;
-
-        currentScale += scaleStep;
-        if (currentScale > targetScale) currentScale = targetScale;
-
-        setScale(currentScale, currentScale);
-    }
-
-    bool isPopping() const { return popping; }
-    void stopPop() { popping = false; } // para detener si quieres
 };
 
 class NormalFruit : public Fruit {
 public:
     NormalFruit(sf::Texture& tex, sf::Vector2f pos, int t) : Fruit(tex, pos, t) {}
-    void onMatch(Board* /*board*/, int /*r*/, int /*c*/) override {
-        // default: add score handled by Board after deletion
+    void onMatch(Board*, int, int ) override {
+       
     }
 };
 
@@ -316,8 +136,8 @@ public:
 class IceFruit : public Fruit {
 public:
     IceFruit(sf::Texture& tex, sf::Vector2f pos, int t) : Fruit(tex, pos, t) {}
-    void onMatch(Board* /*board*/, int /*r*/, int /*c*/) override {
-        // handled by Board (special rules)
+    void onMatch(Board*, int , int ) override {
+   
     }
 };
 class SuperFruit : public Fruit {
@@ -325,12 +145,8 @@ public:
     SuperFruit(sf::Texture& tex, const sf::Vector2f& pos, int logicalType)
         : Fruit(tex, pos, logicalType) {
     }
-
-    // Declaración: onMatch override (definiremos la implementación después del Board)
     void onMatch(Board* board, int row, int col) override;
 };
-
-
 
 // ---------------------- Board ----------------------
 class Board {
@@ -341,8 +157,8 @@ private:
     static constexpr int ICE_INDEX = 6;    // index for ice
     static constexpr int NUM_TEXTURES = 12; // total loaded textures
 
-    Fruit* matrix[SIZE][SIZE];
-    vector<sf::Texture> textures;
+    Fruit* matrix[8][8];
+    sf::Texture textures[12];
 
     // layout logical
     const float originX = 121.f;
@@ -380,20 +196,18 @@ private:
     bool pendingSwapCleaning = false;
     float swapDurationMs = 120.f; // duración base del swap en ms (ajústalo)
 
-    sf::Clock popClock;
+   
 
     const float MARK_SCALE = 1.5f;
     const float SELECT_SCALE = 1.25f;
 
     int selectedRow = -1, selectedCol = -1;
 
-    sf::Sprite manzanaD;
-
     // ---------------- Ajustes de probabilidades por nivel ----------------
     int initBombChance[4] = { 0, 5, 3, 1 };   // índice 1..3 válido
     int initIceChance[4] = { 0, 5, 12, 20 };
-    int refillBombChance[4] = { 0, 5, 3, 1 };
-    int refillIceChance[4] = { 0, 0, 0, 0 };  // no generar hielo en refill según tu requerimiento
+   int refillBombChance[4] = { 0, 5, 3, 1 };
+   
 
     // ----------------- Objetivo del nivel -----------------
     // kinds: 1 = eliminar tipo normal X (count), 2 = eliminar hielos (count), 3 = alcanzar puntos
@@ -401,8 +215,66 @@ private:
     int objectiveTarget = 0;      // target count or target points
     int objectiveProgress = 0;    // current progress
     int objectiveTargetFruit = -1; // for kind==1, which normal fruit (0..NUM_NORMAL-1)
+    sf::Clock animClock;
+public:
+    Board() {
+        srand((time(0)));
 
-    // helpers
+       
+        if (!textures[0].loadFromFile("C:\\Joshua\\Proyecto Primer Avance\\Assets\\Sprite Apple.png")) cerr << "Failed to load textures[0]\n";
+        if (!textures[1].loadFromFile("C:\\Joshua\\Proyecto Primer Avance\\Assets\\Sprite Orange.png")) cerr << "Failed to load textures[1]\n";
+        if (!textures[2].loadFromFile("C:\\Joshua\\Proyecto Primer Avance\\Assets\\Sprite Banana.png")) cerr << "Failed to load textures[2]\n";
+        if (!textures[3].loadFromFile("C:\\Joshua\\Proyecto Primer Avance\\Assets\\Sprite Watermelon.png")) cerr << "Failed to load textures[3]\n";
+        if (!textures[4].loadFromFile("C:\\Joshua\\Proyecto Primer Avance\\Assets\\Sprite Grape.png")) cerr << "Failed to load textures[4]\n";
+        if (!textures[5].loadFromFile("C:\\Joshua\\Proyecto Primer Avance\\Assets\\Bomb12.png")) cerr << "Failed to load textures[5]\n";
+        if (!textures[6].loadFromFile("C:\\Joshua\\Proyecto Primer Avance\\Assets\\cubo hielo3.png")) cerr << "Failed to load textures[5]\n";
+        if (!textures[7].loadFromFile("C:\\Joshua\\Proyecto Primer Avance\\Assets\\manzanaD1.png")) cerr << "Failed to load textures[5]\n";
+        if (!textures[8].loadFromFile("C:\\Joshua\\Proyecto Primer Avance\\Assets\\Naranja de oro12.png")) cerr << "Failed to load textures[5]\n";
+        if (!textures[9].loadFromFile("C:\\Joshua\\Proyecto Primer Avance\\Assets\\Banano dorado12.png")) cerr << "Failed to load textures[5]\n";
+        if (!textures[10].loadFromFile("C:\\Joshua\\Proyecto Primer Avance\\Assets\\sandia dorada12.png")) cerr << "Failed to load textures[5]\n";
+        if (!textures[11].loadFromFile("C:\\Joshua\\Proyecto Primer Avance\\Assets\\Unvas doradas12.png")) cerr << "Failed to load textures[5]\n";
+   
+      
+        initObjectiveForLevel(level);
+     
+        for (int r = 0; r < SIZE; ++r)
+            for (int c = 0; c < SIZE; ++c) {
+                matrix[r][c] = nullptr;
+                marked[r][c] = comboMarked[r][c] = forcedBreak[r][c] = false;
+            }
+
+        // Ahora: inicializar usando probabilidades del nivel actual (aquí el hielo sí puede aparecer)
+        for (int r = 0; r < SIZE; ++r) {
+            for (int c = 0; c < SIZE; ++c) {
+                sf::Vector2f center = cellCenter(r, c);
+                int roll = rand() % 100;
+                if (roll < initBombChance[level]) {
+                    matrix[r][c] = new BombFruit(textures[BOMB_INDEX], center, BOMB_INDEX);
+                }
+                else if (roll < initBombChance[level] + initIceChance[level]) {
+                    matrix[r][c] = new IceFruit(textures[ICE_INDEX], center, ICE_INDEX);
+                }
+                else {
+                    int t = rand() % NUM_NORMAL;
+                    matrix[r][c] = new NormalFruit(textures[t], center, t);
+                }
+            }
+        }
+
+        bool cont = true;
+        while (cont) {
+            if (clearCombosOnce(false)) {
+                applyGravityInstantForInit();
+            }
+            else cont = false;
+        }
+    }
+
+    ~Board() {
+        for (int r = 0; r < SIZE; ++r)
+            for (int c = 0; c < SIZE; ++c)
+                if (matrix[r][c]!=nullptr) { delete matrix[r][c];}
+    }
     void initObjectiveForLevel(int lvl) {
         objectiveKind = 0;
         objectiveTarget = 0;
@@ -411,7 +283,6 @@ private:
         if (lvl == 1) {
             objectiveKind = 1;
             objectiveTarget = 10;
-            // seleccionar aleatoriamente tipo normal [0..NUM_NORMAL-1]
             objectiveTargetFruit = rand() % NUM_NORMAL;
         }
         else if (lvl == 2) {
@@ -440,75 +311,6 @@ private:
             // para objetivo de puntos, el progreso está ligado al score; lo actualizaremos fuera
         }
     }
-
-public:
-    Board(int startLevel = 1) {
-        srand(static_cast<unsigned int>(time(nullptr)));
-
-        textures.resize(NUM_TEXTURES);
-
-        // Ajusta rutas según tu máquina:
-        if (!textures[0].loadFromFile("C:\\Joshua\\Proyecto Primer Avance\\Assets\\Sprite Apple.png")) cerr << "Failed to load textures[0]\n";
-        if (!textures[1].loadFromFile("C:\\Joshua\\Proyecto Primer Avance\\Assets\\Sprite Orange.png")) cerr << "Failed to load textures[1]\n";
-        if (!textures[2].loadFromFile("C:\\Joshua\\Proyecto Primer Avance\\Assets\\Sprite Banana.png")) cerr << "Failed to load textures[2]\n";
-        if (!textures[3].loadFromFile("C:\\Joshua\\Proyecto Primer Avance\\Assets\\Sprite Watermelon.png")) cerr << "Failed to load textures[3]\n";
-        if (!textures[4].loadFromFile("C:\\Joshua\\Proyecto Primer Avance\\Assets\\Sprite Grape.png")) cerr << "Failed to load textures[4]\n";
-        if (!textures[5].loadFromFile("C:\\Joshua\\Proyecto Primer Avance\\Assets\\Bomb12.png")) cerr << "Failed to load textures[5]\n";
-        if (!textures[6].loadFromFile("C:\\Joshua\\Proyecto Primer Avance\\Assets\\cubo hielo3.png")) cerr << "Failed to load textures[5]\n";
-        if (!textures[7].loadFromFile("C:\\Joshua\\Proyecto Primer Avance\\Assets\\manzanaD1.png")) cerr << "Failed to load textures[5]\n";
-        if (!textures[8].loadFromFile("C:\\Joshua\\Proyecto Primer Avance\\Assets\\Naranja de oro12.png")) cerr << "Failed to load textures[5]\n";
-        if (!textures[9].loadFromFile("C:\\Joshua\\Proyecto Primer Avance\\Assets\\Banano dorado12.png")) cerr << "Failed to load textures[5]\n";
-        if (!textures[10].loadFromFile("C:\\Joshua\\Proyecto Primer Avance\\Assets\\sandia dorada12.png")) cerr << "Failed to load textures[5]\n";
-        if (!textures[11].loadFromFile("C:\\Joshua\\Proyecto Primer Avance\\Assets\\Unvas doradas12.png")) cerr << "Failed to load textures[5]\n";
-      
-  
-       
-
-        level = startLevel;
-        initObjectiveForLevel(level);
-        remainingMoves = 3;
-        // init arrays & fill randomly
-        for (int r = 0; r < SIZE; ++r)
-            for (int c = 0; c < SIZE; ++c) {
-                matrix[r][c] = nullptr;
-                marked[r][c] = comboMarked[r][c] = forcedBreak[r][c] = false;
-            }
-
-        // Ahora: inicializar usando probabilidades del nivel actual (aquí el hielo sí puede aparecer)
-        for (int r = 0; r < SIZE; ++r) {
-            for (int c = 0; c < SIZE; ++c) {
-                sf::Vector2f center = cellCenter(r, c);
-                int roll = rand() % 100;
-                if (roll < initBombChance[level]) {
-                    matrix[r][c] = new BombFruit(textures[BOMB_INDEX], center, BOMB_INDEX);
-                }
-                else if (roll < initBombChance[level] + initIceChance[level]) {
-                    matrix[r][c] = new IceFruit(textures[ICE_INDEX], center, ICE_INDEX);
-                }
-                else {
-                    int t = rand() % NUM_NORMAL;
-                    matrix[r][c] = new NormalFruit(textures[t], center, t);
-                }
-            }
-        }
-
-        // Stabilize initial board: remove combos but do NOT remove ice due to adjacency
-        bool cont = true;
-        while (cont) {
-            if (clearCombosOnce(false)) {
-                // apply instant gravity for init (no animation)
-                applyGravityInstantForInit();
-            }
-            else cont = false;
-        }
-    }
-
-    ~Board() {
-        for (int r = 0; r < SIZE; ++r)
-            for (int c = 0; c < SIZE; ++c)
-                if (matrix[r][c]) { delete matrix[r][c]; matrix[r][c] = nullptr; }
-    }
-
     void setLevel(int lvl) {
         if (lvl < 1) lvl = 1;
         if (lvl > 3) lvl = 3;
@@ -527,7 +329,8 @@ public:
         return { col * cellW + originX + cellW / 2.f, row * cellH + originY + cellH / 2.f };
     }
 
-    void markCellForRemoval(int r, int c, bool forceBreakIce = false) {
+    // en Board:
+    void markCellForRemoval(int r, int c, bool forceBreakIce = false, bool animate = true) {
         if (r < 0 || r >= SIZE || c < 0 || c >= SIZE) return;
         marked[r][c] = true;
         if (forceBreakIce) forcedBreak[r][c] = true;
@@ -535,7 +338,7 @@ public:
     }
 
     bool detectCombinationsWithoutRemoving() {
-        // horizontals (IGNORAR ICE_INDEX)
+        // horizontals 
         for (int r = 0; r < SIZE; ++r) {
             int count = 1;
             for (int c = 1; c < SIZE; ++c) {
@@ -549,7 +352,7 @@ public:
                 else count = 1;
             }
         }
-        // verticals (IGNORAR ICE_INDEX)
+        // verticals 
         for (int c = 0; c < SIZE; ++c) {
             int count = 1;
             for (int r = 1; r < SIZE; ++r) {
@@ -566,23 +369,19 @@ public:
         return false;
     }
 
-
     bool formsCombinationWhenSwapping(int r1, int c1, int r2, int c2) {
         Fruit* tmp = matrix[r1][c1];
         matrix[r1][c1] = matrix[r2][c2];
         matrix[r2][c2] = tmp;
 
-        // Usamos la función de detección que ya IGNORA hielo.
         bool has = detectCombinationsWithoutRemoving();
 
-        // Restaurar
         tmp = matrix[r1][c1];
         matrix[r1][c1] = matrix[r2][c2];
         matrix[r2][c2] = tmp;
 
         return has;
     }
-
 
     // clear combos once; two modes: initialization (countScore==false) or game (true)
     bool clearCombosOnce(bool countScore) {
@@ -636,14 +435,8 @@ public:
                     for (int c = 0; c < SIZE; ++c)
                         if (markedLocal[r][c] && matrix[r][c]) {
                             // NO actualizar objetivo aquí: inicialización del tablero no cuenta
-                            // (antes: incrementObjectiveOnDelete(matrix[r][c]->getType()); )
-
-                            // liberar fruta (si usas punteros crudos)
                             delete matrix[r][c];
                             matrix[r][c] = nullptr;
-
-                            // si migraste a unique_ptr usa:
-                            // matrix[r][c].reset();
                         }
             }
 
@@ -656,7 +449,6 @@ public:
             bool markedLocal[SIZE][SIZE] = { false };
             bool comboLocal[SIZE][SIZE] = { false };
 
-            // -----------------------------------
           // horizontals (robusto para hielo)
             for (int r = 0; r < SIZE; ++r) {
                 int c = 0;
@@ -668,8 +460,6 @@ public:
                     int run = k - c;
 
                     if (run >= 3) {
-                        // Si el tipo es ICE_INDEX: procesamos SOLO si el run contiene
-                        // al menos una celda que fue parte del último swap (wasSwapped).
                         bool runIsIce = (t == ICE_INDEX);
                         bool runContainsSwapped = false;
                         if (runIsIce) {
@@ -694,9 +484,6 @@ public:
                                         comboLocal[r][s] = true;
                                         anyRemoval = true;
                                     }
-                                    // si no fue swapped y runIsIce==true pero runContainsSwapped==true,
-                                    // la marcación anterior con wasSwapped cubrirá los que forman parte del swap;
-                                    // los otros hielos del run NO se marcan (porque queremos que se rompa sólo el hielo movido).
                                 }
                                 else {
                                     // fruta normal / bomba -> marcar normalmente
@@ -708,9 +495,9 @@ public:
                         }
 
                         if (run >= 4) {
-                            super = t; // guarda el tipo de fruta
+                            super = t;
                             superR = r;
-                            superC = c + (run - 1) / 2; // columna central (si par, toma el de la izquierda)
+                            superC = c + (run - 1) / 2; 
                         }
 
                     }
@@ -718,10 +505,6 @@ public:
                 }
             }
 
-
-            // -----------------------------------
-            // Verticales
-            // -----------------------------------
      // verticals (robusto para hielo)
             for (int c = 0; c < SIZE; ++c) {
                 int r = 0;
@@ -763,22 +546,15 @@ public:
                                 }
                             }
                         }
-
-
                         if (run >= 4) {
-                            super = t; // guarda el tipo de fruta
-                            superR = r + run - 1; // fila más baja
+                            super = t; 
+                            superR = r + run - 1; 
                             superC = c;
                         }
-
-
                     }
                     r = k;
                 }
             }
-
-
-
             // if there was a combo and last swapped cells are ice, mark them too (case: swap ice -> combo elsewhere)
             if (anyRemoval) {
                 if (lastSwapR1 != -1) {
@@ -799,7 +575,6 @@ public:
                     }
                 }
             }
-
             if (anyRemoval) {
                 for (int r = 0; r < SIZE; ++r) {
                     for (int c = 0; c < SIZE; ++c) {
@@ -807,12 +582,7 @@ public:
                         comboMarked[r][c] = comboLocal[r][c];
                         if (marked[r][c] && matrix[r][c]) {
 
-                            //  matrix[r][c]->startMoveTo(200, 100, 100.f);
-
-
-                            matrix[r][c]->startPop(250.f, MARK_SCALE); // ejemplo: 220ms hasta MARK_SCALE
-
-
+                            matrix[r][c]->startPop(250.f, MARK_SCALE);
 
                         }
                     }
@@ -820,7 +590,6 @@ public:
                 removalPending = true;
                 return true;
             }
-
             return false;
         }
         else {
@@ -839,9 +608,8 @@ public:
                             continue;
                         }
                         else {
-                            // call onMatch (bomb will mark neighbors etc)
                             matrix[r][c]->onMatch(this, r, c);
-                            //  matrix[r][c]->onMatch(this, r, c);
+                           
                             processed[r][c] = true;
                             progress = true;
                         }
@@ -859,26 +627,18 @@ public:
 
                         bool isIce = (matrix[r][c]->getType() == ICE_INDEX);
                         if (isIce && !comboMarked[r][c] && !forcedBreak[r][c]) {
-                            // no se elimina este hielo (no fue combo ni forced)
                             continue;
                         }
 
                         // Si esta celda es la posición objetivo de la SUPER y hay un super pendiente:
                         if (super >= 0 && super <= 4 && r == superR && c == superC) {
-                            // reemplazamos la fruta por la super-fruta INMEDIATAMENTE
-                            // (no contamos puntos por esta celda; es la nueva super)
                             delete matrix[r][c];
                             matrix[r][c] = new SuperFruit(textures[7 + super], cellCenter(r, c), super);
 
                             // opcional: ajustar visual (por ejemplo, destacar)
-                            matrix[r][c]->resetVisual();
-
-                            // consumimos el super y reseteamos la posición objetivo
+                           // matrix[r][c]->resetVisual()
                             super = -1;
                             superR = superC = -1;
-
-                            // no marcamos anyRemoval por esta celda (porque no fue realmente removida)
-                            // (si quieres que la creación de la super cuente como un "evento" podrías setear anyRemoval=true)
                             continue;
                         }
 
@@ -894,10 +654,6 @@ public:
                         if (objectiveKind == 3) objectiveProgress = score;
                     }
                 }
-
-
-
-
                 // reset flags and visuals
                 for (int r = 0; r < SIZE; ++r) for (int c = 0; c < SIZE; ++c) {
                     marked[r][c] = comboMarked[r][c] = forcedBreak[r][c] = false;
@@ -1002,12 +758,28 @@ public:
         gravityAnimating = true;
     }
     int getSuperCount() const { return super; }
-    // Public helpers for SuperFruit actions
- // en Board (public)
     int getSize() const { return SIZE; }
     int getTypeAt(int r, int c) const;
 
 
+    // Devuelve true si alguna fruta está en animación "pop"
+    bool hasActivePops() const {
+        for (int r = 0; r < SIZE; ++r) {
+            for (int c = 0; c < SIZE; ++c) {
+                if (matrix[r][c] && matrix[r][c]->isPopActive()) return true;
+            }
+        }
+        return false;
+    }
+
+    // Devuelve true si hay cualquier animación/limpieza en progreso que deba bloquear el fin del nivel
+    bool isIdle() const {
+        if (cleaningInProgress) return false;
+        if (gravityAnimating) return false;
+        if (swapAnimating) return false;
+        if (hasActivePops()) return false;
+        return true;
+    }
 
 
     // Immediate gravity used only in init phase so we don't rely on animation loop
@@ -1033,11 +805,10 @@ public:
                     matrix[r][c] = createFruitByType(t, textures[t], center);
                 }
             }
-            // Si hay un super pendiente, forzamos su creación en la celda objetivo
-
+        
 
         }
-        // Set pixel positions to targets (center) so sprites look correct
+     
         for (int r = 0; r < SIZE; ++r)
             for (int c = 0; c < SIZE; ++c)
                 if (matrix[r][c]) {
@@ -1046,85 +817,7 @@ public:
                 }
     }
 
-    // update animations per-frame (call from Game update)
-    //void updateAnimations() {
-    //    bool anyMoving = false;
-    //    // update all fruits (swaps and gravity)
-    //    for (int r = 0; r < SIZE; ++r) {
-    //        for (int c = 0; c < SIZE; ++c) {
-    //            if (matrix[r][c]) {
-    //                matrix[r][c]->updateMove();
-    //                if (matrix[r][c]->isMoving()) anyMoving = true;
-    //            }
-    //        }
-    //    }
-
-    //    // If nothing is moving, check flags
-    //    if (!anyMoving) {
-    //        // if gravity was animating, stop it
-    //        if (gravityAnimating) gravityAnimating = false;
-
-    //        // if swap animating just finished, trigger cleaning
-    //        if (swapAnimating) {
-    //            swapAnimating = false;
-    //            if (pendingSwapCleaning) {
-    //                pendingSwapCleaning = false;
-    //                // we start cleaning phase now that swap animation ended
-    //                startCleaning(true);
-    //            }
-    //        }
-    //    }
-    //}
-
-
-
-
-    // en Board (miembro)
-    sf::Clock animClock; // inicializar en constructor si quieres
-
-    //void updateAnimations() {
-    //    // calcula delta en ms desde la última llamada
-    //    float deltaMs = animClock.restart().asMilliseconds();
-
-    //    bool anyMoving = false;
-    //    // Actualiza movimientos lineales (startMoveTo / updateMove) si los tienes
-    //    for (int r = 0; r < SIZE; ++r) {
-    //        for (int c = 0; c < SIZE; ++c) {
-    //            if (matrix[r][c]) {
-    //                // si tienes movimiento por gravedad / swap
-    //                matrix[r][c]->updateMove();
-    //                if (matrix[r][c]->isMoving()) anyMoving = true;
-
-    //                // actualizar pop animation (si está activa)
-    //                if (matrix[r][c]->isPopActive()) {
-    //                    bool finished = matrix[r][c]->updatePop(deltaMs);
-    //                    // aquí NO borramos: tú decides qué hacer cuando termine
-    //                    // pero si quieres detectar finishes, podrías marcar una flag o poner en una lista
-    //                    (void)finished;
-    //                }
-    //            }
-    //        }
-    //    }   if (!anyMoving) {
-    //        // if gravity was animating, stop it
-    //        if (gravityAnimating) gravityAnimating = false;
-
-    //        // if swap animating just finished, trigger cleaning
-    //        if (swapAnimating) {
-    //            swapAnimating = false;
-    //            if (pendingSwapCleaning) {
-    //                pendingSwapCleaning = false;
-    //                // we start cleaning phase now that swap animation ended
-    //                startCleaning(true);
-    //            }
-    //        }
-    //    }
-
-    //    // ... El resto de tu lógica de animación (gravedad, swap) sigue como antes
-    //    if (!anyMoving) gravityAnimating = false; // o según tu flujo
-    //}
-
-
-
+   
     void updateAnimations() {
         float deltaMs = animClock.restart().asMilliseconds();
         bool anyMoving = false;
@@ -1133,55 +826,36 @@ public:
             for (int c = 0; c < SIZE; ++c) {
                 if (!matrix[r][c]) continue;
 
-                // 1) mover (swap / gravity) si aplica
                 matrix[r][c]->updateMove();
                 if (matrix[r][c]->isMoving()) anyMoving = true;
 
-                // 2) animación pop
                 if (matrix[r][c]->isPopActive()) {
                     bool finished = matrix[r][c]->updatePop(deltaMs);
                     if (finished) {
-                        // Si es bomba: detonar AHORA (marca vecinos y su celda).
-                        // (IMPORTANTE: clearCombosOnce debe NO volver a ejecutar onMatch si ya lo hacemos aquí.)
+                       
                         if (BombFruit* b = dynamic_cast<BombFruit*>(matrix[r][c])) {
-                            b->onMatch(this, r, c); // marca vecinos en marked[][] y forcedBreak si corresponde
-                            // Asegurar que la propia celda también queda marcada:
+                            b->onMatch(this, r, c); 
+                          
                             markCellForRemoval(r, c, true);
-
-                            // Inicia animación visual en todas las celdas marcadas (vecinos y centro).
-                            // Esto asegura que el jugador vea la pop en las frutas que van a eliminarse.
+                           
                             for (int rr = 0; rr < SIZE; ++rr) {
                                 for (int cc = 0; cc < SIZE; ++cc) {
                                     if (marked[rr][cc] && matrix[rr][cc]) {
-                                        // startPop es idempotente (no reinicia si ya está animando)
+
                                         matrix[rr][cc]->startPop(250, 1.6f);
                                     }
                                 }
                             }
-
-                            // Finalmente lanzamos la limpieza de una vez para que las frutas marcadas
-                            // se eliminen sin requerir más clicks o movimientos.
                             startCleaning(true);
-
-                            // Opcional: si quieres borrar la bomba inmediatamente tras detonar,
-                            // podrías delete matrix[r][c]; matrix[r][c] = nullptr;
-                            // pero dejar que clearCombosOnce haga el borrado mantiene el flujo consistente.
                         }
                         else {
-                            // Si no es bomba: cuando termina su pop, simplemente marcar para limpieza
-                            // para que clearCombosOnce elimine la celda (si no se había marcado ya).
-                            // (Si ya estaba marcada, markCellForRemoval es idempotente.)
                             markCellForRemoval(r, c, false);
-                            // y lanzar limpieza
                             startCleaning(true);
                         }
                     }
                 }
-                // (no hacemos nada extra si no está popActive)
             }
         }
-
-        // lógica anterior de movimiento / gravedad / swap
         if (!anyMoving) {
             if (gravityAnimating) gravityAnimating = false;
 
@@ -1194,12 +868,8 @@ public:
             }
         }
     }
-
-
-
     bool isGravityAnimating() const { return gravityAnimating; }
 
-    // swapCells: check adjacency & whether forms combo; immediate visual swap
     bool swapCells(int r1, int c1, int r2, int c2) {
         if (r1 < 0 || r1 >= SIZE || c1 < 0 || c1 >= SIZE || r2 < 0 || r2 >= SIZE || c2 < 0 || c2 >= SIZE) return false;
         int dr = abs(r1 - r2), dc = abs(c1 - c2);
@@ -1212,34 +882,24 @@ public:
 
         if (!formsCombinationWhenSwapping(r1, c1, r2, c2)) return false;
 
-        // record swap positions for ice rules
         lastSwapR1 = r1; lastSwapC1 = c1; lastSwapR2 = r2; lastSwapC2 = c2;
 
-        // swap pointers in matrix immediately (logical board changes)
         Fruit* tmp = matrix[r1][c1];
         matrix[r1][c1] = matrix[r2][c2];
         matrix[r2][c2] = tmp;
 
-        // compute centers
         sf::Vector2f center1 = cellCenter(r1, c1);
         sf::Vector2f center2 = cellCenter(r2, c2);
 
-        // compute duration based on speedMultiplier if present
         float dur = swapDurationMs;
-#ifdef BOARD_HAS_SPEED_MULTIPLIER
-        dur = swapDurationMs / speedMultiplier; // si usas speedMultiplier
-#endif
 
-        // start move animations for both fruits (if exist)
         if (matrix[r1][c1]) matrix[r1][c1]->startMoveTo(center1.x, center1.y, dur);
         if (matrix[r2][c2]) matrix[r2][c2]->startMoveTo(center2.x, center2.y, dur);
 
-        // mark that a swap animation is happening; delay cleaning until animation ends
         swapAnimating = true;
         pendingSwapCleaning = true;
 
         --remainingMoves;
-        // no startCleaning() aquí: esperaremos a que termine la animación y lo haremos en updateAnimations()
         return true;
     }
 
@@ -1266,7 +926,6 @@ public:
 
     bool isCleaning() const { return cleaningInProgress; }
 
-    // selection & clicks: first selects (scale), second attempts swap; clicking a bomb detonates instantly
     void selectOrSwap(int row, int col) {
         if (row < 0 || row >= SIZE || col < 0 || col >= SIZE) return;
         if (!matrix[row][col]) return;
@@ -1274,55 +933,27 @@ public:
         if (selectedRow == -1) {
             BombFruit* asBomb = dynamic_cast<BombFruit*>(matrix[row][col]);
             if (asBomb != nullptr) {
-                // 1. iniciar animación pop
+
                 matrix[row][col]->startPop(250.f, MARK_SCALE);
-
-
-
-                //  sf::sleep(sf::milliseconds(1000));
-
-
-
 
                 removalPending = true;
                 startCleaning(true);
-                // 2. detonar la bomba (efecto)
 
-                //markCellForRemoval(row, col, true);   // marcamos su celda y vecinos
-               // asBomb->onMatch(this, row, col);
-                // 3. marcar para limpieza
-              //  matrix[row][col] = nullptr;
-
-
-
-
-                // después de asBomb->onMatch(this, row, col);, itera vecinos y si están marcados inicia la animación
                 for (int dr = -1; dr <= 1; ++dr) {
                     for (int dc = -1; dc <= 1; ++dc) {
                         int nr = row + dr, nc = col + dc;
                         if (nr >= 0 && nr < SIZE && nc >= 0 && nc < SIZE && matrix[nr][nc]) {
-                            // start pop solo si la celda fue marcada por la detonacion
-                            // (markCellForRemoval ya fue llamado por onMatch)
-                            // para evitar duplicados, startPop debe ser idempotente (interna lo ignora si ya popActive)
-                            matrix[nr][nc]->startPop(250.f, MARK_SCALE);
 
+                            matrix[nr][nc]->startPop(250.f, MARK_SCALE);
                         }
                     }
                 }
-
-
-
-                // 4. iniciar limpieza (pero deja que updatePop corra al menos un frame)
-
-
                 return;
             }
-
             selectedRow = row; selectedCol = col;
             matrix[selectedRow][selectedCol]->setScale(SELECT_SCALE, SELECT_SCALE);
             return;
         }
-
         // second click
         if (selectedRow == row && selectedCol == col) {
             if (matrix[selectedRow][selectedCol]) matrix[selectedRow][selectedCol]->resetVisual();
@@ -1344,14 +975,12 @@ public:
     }
 
     void resetBoard() {
-        // free current
         for (int r = 0; r < SIZE; ++r) for (int c = 0; c < SIZE; ++c) if (matrix[r][c]) { delete matrix[r][c]; matrix[r][c] = nullptr; }
 
-        // reset flags & stats
         for (int r = 0; r < SIZE; ++r) for (int c = 0; c < SIZE; ++c) {
             marked[r][c] = comboMarked[r][c] = forcedBreak[r][c] = false;
         }
-        remainingMoves = 5; // fixed default
+        remainingMoves = 5; 
         score = 0;
         super = 0;
         cleaningInProgress = false;
@@ -1361,10 +990,8 @@ public:
         super = -1;
         superR = superC = -1;
 
-        // reiniciar objetivo para el nivel actual
         initObjectiveForLevel(level);
 
-        // create new matrix with random fruits based on current level: ice only in init, bombs possibly in init
         for (int r = 0; r < SIZE; ++r) {
             for (int c = 0; c < SIZE; ++c) {
                 sf::Vector2f center = cellCenter(r, c);
@@ -1381,7 +1008,6 @@ public:
                 }
             }
         }
-
         bool cont = true;
         while (cont) {
             if (clearCombosOnce(false)) {
@@ -1395,9 +1021,9 @@ public:
     int getScore() const { return score; }
     int getRemainingMoves() const { return remainingMoves; }
     bool hasMoves() const { return remainingMoves > 0; }
-    void resetMoves(int n) { remainingMoves = n; } // kept for interface but not used for difficulty
+    void resetMoves(int n) { remainingMoves = n; }
     int getLevel() const { return level; }
-    void setLevelPublic(int l) { setLevel(l); } // wrapper pública usada por Game
+    void setLevelPublic(int l) { setLevel(l); }
 
     // Objetivo queries (para UI)
     string getObjectiveDescription() const {
@@ -1418,8 +1044,6 @@ public:
                 return "Eliminar " + to_string(objectiveTarget) + " Uvas ";
             }
         }
-
-
         else if (objectiveKind == 2) {
             return "Eliminar " + to_string(objectiveTarget) + " hielos";
         }
@@ -1461,8 +1085,6 @@ void BombFruit::onMatch(Board* board, int row, int col) {
         }
     }
 }
-
-
 int Board::getTypeAt(int r, int c) const {
     if (r < 0 || r >= SIZE || c < 0 || c >= SIZE) return -1;
     if (!matrix[r][c]) return -1;
@@ -1470,49 +1092,54 @@ int Board::getTypeAt(int r, int c) const {
 }
 
 void SuperFruit::onMatch(Board* board, int row, int col) {
-    int type = getType(); // logical type 0..4
+    int fullType = getType();
+    int idx = -1;
+    if (fullType >= 7 && fullType <= 11) idx = fullType - 7; 
+    else if (fullType >= 0 && fullType <= 4) idx = fullType; 
+
+    if (idx < 0) {
+        return;
+    }
+
     int N = board->getSize();
 
-    // Helper lambda: marcar si está dentro del tablero
     auto tryMark = [&](int r, int c) {
         if (r >= 0 && r < N && c >= 0 && c < N) {
-            board->markCellForRemoval(r, c, true); // force removal
+            board->markCellForRemoval(r, c, true, true);
         }
         };
 
-    switch (type) {
-    case 0: // textura 7 -> entire ROW
+    switch (idx) {
+    case 0: 
         for (int c = 0; c < N; ++c) tryMark(row, c);
         break;
 
-    case 1: // textura 8 -> entire COLUMN
+    case 1: 
         for (int r = 0; r < N; ++r) tryMark(r, col);
         break;
 
-    case 2: // textura 9 -> CROSS (row + col)
+    case 2:
         for (int c = 0; c < N; ++c) tryMark(row, c);
         for (int r = 0; r < N; ++r) tryMark(r, col);
         break;
 
-    case 3: // textura 10 -> 3x3 area centered
+    case 3:
         for (int dr = -1; dr <= 1; ++dr)
             for (int dc = -1; dc <= 1; ++dc)
                 tryMark(row + dr, col + dc);
         break;
 
-    case 4: // textura 11 -> all fruits of same logical type
+    case 4:
         for (int r = 0; r < N; ++r) {
             for (int c = 0; c < N; ++c) {
                 int t = board->getTypeAt(r, c);
-                if (t == type) tryMark(r, c);
+                if (t == idx) tryMark(r, c);
             }
         }
         break;
-
-    default:
-        break;
     }
 }
+
 
 
 
@@ -1533,14 +1160,6 @@ private:
     // timing cleaning
     sf::Clock cleaningClock;
     sf::Time cleaningDelay = sf::milliseconds(800);
-
-  
-
-   
-
-
-
-
 
     // Menu UI
     sf::RectangleShape playButton;
@@ -1571,7 +1190,7 @@ private:
     GameState state = GameState::MENU;
 
 public:
-    Game() : board(1) { // start level 1
+    Game() : board() { // start level 1
         sf::View view(sf::FloatRect(0.f, 0.f, 800.f, 600.f));
         window.setView(view);
 
@@ -1725,10 +1344,7 @@ public:
         board.resetMoves(3); // default moves (no longer changed by difficulty)
 
         window.setFramerateLimit(60);
-
-
     }
-
     void processEvents() {
         sf::Event event;
         while (window.pollEvent(event)) {
@@ -1764,7 +1380,6 @@ public:
                 }
                 else if (state == GameState::PLAYING) {
                     if (board.isCleaning()) {
-                        // ignore clicks while cleaning (like earlier)
                     }
                     else {
                         if (!board.hasMoves()) continue;
@@ -1802,11 +1417,7 @@ public:
                         board.resetMoves(5);
                         return;
                     }
-                    // Next Level: solo visible si level < 3 y además,
-                    // - si hardSelected == false -> funciona siempre
-                    // - si hardSelected == true -> solo si objetivo completado
                     if (board.getLevel() < 3 && nextLevelButton.getGlobalBounds().contains(world)) {
-                        // if hard selected and objective failed, button is not supposed to be shown/clickable.
                         bool objectiveComplete = board.isObjectiveComplete();
                         bool canAdvance = (!hardSelected) || objectiveComplete;
                         if (canAdvance) {
@@ -1816,7 +1427,6 @@ public:
                             state = GameState::PLAYING;
                             return;
                         }
-                        // otherwise no action (button hidden when failed in hard)
                     }
                 }
             }
@@ -1825,12 +1435,7 @@ public:
 
     void update() {
         if (state == GameState::PLAYING) {
-            // update gravity animations each frame if active
-
-            // Always update animations (gravity or swap)
             board.updateAnimations();
-     
-                // if (board.isGravityAnimating()) {
                 if (board.isGravityAnimating()) {
                     board.updateAnimations();
                 }
@@ -1840,27 +1445,17 @@ public:
                         cleaningClock.restart();
                     }
                 }
-
-
-
-
-
-                    if (!board.hasMoves() && !board.isCleaning()) {
-                        state = GameState::GAME_OVER;
-                    }
-
+                if (!board.hasMoves() && board.isIdle()) {
+                    state = GameState::GAME_OVER;
+                }
                     scoreText.setString("PUNTUACIÓN: " + to_string(board.getScore()));
                     movesText.setString("MOVIMIENTOS: " + to_string(board.getRemainingMoves()));
-
 
                     levelText.setString("Nivel: " + to_string(board.getLevel()));
                     levelText.setPosition(360.f, 10.f);
                     levelText.setCharacterSize(25);
-                }
-            
-        
+        }
     }
-
     void render() {
         window.clear(sf::Color::White);
 
@@ -1880,7 +1475,6 @@ public:
         else if (state == GameState::PLAYING) {
             if (menuTexture.getSize().x != 0 && menuTexture.getSize().y != 0) window.draw(menuSprite);
             if (backgroundTexture.getSize().x != 0 && backgroundTexture.getSize().y != 0) window.draw(backgroundSprite);
-
             board.draw(window);
 
             // draw texts
@@ -1903,11 +1497,8 @@ public:
             string desc = board.getObjectiveDescription();
             string prog = board.getObjectiveProgressText();
 
-            // Si el jugador escogió FACIL, mostrarlos como "secundario"
-            
                     objProgress.setString(" " + desc + "\n" + prog);
            
-          
             objProgress.setPosition(605.f, 35.f);
 
             window.draw(objTitle);
@@ -1948,14 +1539,10 @@ public:
                 }
             }
             else {
-                resultText.setString(""); // sin objetivo
+                resultText.setString(""); 
             }
             resultText.setPosition(110.f, 140.f);
             window.draw(resultText);
-
-            // Si el nivel actual es < 3, mostramos botón next level solo si:
-            // - Si dificultad EASY: siempre (objetivos son secundarios)
-            // - Si dificultad HARD: solo si objetivo completado
             if (board.getLevel() < 3) {
                 if (!hardSelected) {
                     // easy: mostrar y permitir avanzar
@@ -1971,7 +1558,6 @@ public:
                     // else no dibujar el botón
                 }
             }
-
             // mostrar progreso del objetivo en pantalla final
             sf::Text objTitle;
             objTitle.setFont(font);
@@ -1997,10 +1583,8 @@ public:
             finalScore.setPosition(305.f, 90.f);
             window.draw(finalScore);
         }
-
         window.display();
     }
-
     void run() {
         while (window.isOpen()) {
             processEvents();
@@ -2009,11 +1593,8 @@ public:
         }
     }
 };
-
 // ---------------------- main ----------------------
 int main() {
     Game g;
     g.run();
-    return 0;
 }
-
