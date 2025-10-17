@@ -21,9 +21,6 @@
     <ClCompile Include="Proyecto.cpp">
       <Filter>Archivos de origen</Filter>
     </ClCompile>
-    <ClCompile Include="Pruebas.cpp">
-      <Filter>Archivos de origen</Filter>
-    </ClCompile>
     <ClCompile Include="Pruebas2.cpp">
       <Filter>Archivos de origen</Filter>
     </ClCompile>
@@ -38,5 +35,8 @@
     <ClInclude Include="Game.h">
       <Filter>Archivos de encabezado</Filter>
     </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="Código nuevo y cambiado.txt" />
   </ItemGroup>
 </Project>

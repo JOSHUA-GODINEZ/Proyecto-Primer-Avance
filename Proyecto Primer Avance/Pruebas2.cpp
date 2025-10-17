@@ -226,8 +226,8 @@ public:
         if (!textures[2].loadFromFile("C:\\Joshua\\Proyecto Primer Avance\\Assets\\Sprite Banana.png")) cerr << "Failed to load textures[2]\n";
         if (!textures[3].loadFromFile("C:\\Joshua\\Proyecto Primer Avance\\Assets\\Sprite Watermelon.png")) cerr << "Failed to load textures[3]\n";
         if (!textures[4].loadFromFile("C:\\Joshua\\Proyecto Primer Avance\\Assets\\Sprite Grape.png")) cerr << "Failed to load textures[4]\n";
-        if (!textures[5].loadFromFile("C:\\Joshua\\Proyecto Primer Avance\\Assets\\Bomb12.png")) cerr << "Failed to load textures[5]\n";
-        if (!textures[6].loadFromFile("C:\\Joshua\\Proyecto Primer Avance\\Assets\\cubo hielo3.png")) cerr << "Failed to load textures[5]\n";
+        if (!textures[5].loadFromFile("C:\\Joshua\\Proyecto Primer Avance\\Assets\\Bomba.png")) cerr << "Failed to load textures[5]\n";
+        if (!textures[6].loadFromFile("C:\\Joshua\\Proyecto Primer Avance\\Assets\\cubo hielo.png")) cerr << "Failed to load textures[5]\n";
         if (!textures[7].loadFromFile("C:\\Joshua\\Proyecto Primer Avance\\Assets\\manzanaD1.png")) cerr << "Failed to load textures[5]\n";
         if (!textures[8].loadFromFile("C:\\Joshua\\Proyecto Primer Avance\\Assets\\Naranja de oro12.png")) cerr << "Failed to load textures[5]\n";
         if (!textures[9].loadFromFile("C:\\Joshua\\Proyecto Primer Avance\\Assets\\Banano dorado12.png")) cerr << "Failed to load textures[5]\n";
@@ -337,7 +337,7 @@ public:
         removalPending = true;
 
         if (animate && matrix[r][c]) {
-            matrix[r][c]->startPop(250.f, MARK_SCALE);
+            matrix[r][c]->startPop(300.f, MARK_SCALE);
            // printf("Iniciando animación en celda (%d, %d)\n", r, c);  // Depuración
         }
        /* else {
@@ -590,7 +590,7 @@ public:
                         comboMarked[r][c] = comboLocal[r][c];
                         if (marked[r][c] && matrix[r][c]) {
 
-                            matrix[r][c]->startPop(250.f, MARK_SCALE);
+                            matrix[r][c]->startPop(300.f, MARK_SCALE);
 
                         }
                     }
@@ -925,7 +925,7 @@ public:
             BombFruit* asBomb = dynamic_cast<BombFruit*>(matrix[row][col]);
             if (asBomb != nullptr) {
 
-                matrix[row][col]->startPop(250.f, MARK_SCALE);
+                matrix[row][col]->startPop(300.f, MARK_SCALE);
 
                 removalPending = true;
                 startCleaning(true);
@@ -935,7 +935,7 @@ public:
                         int nr = row + dr, nc = col + dc;
                         if (nr >= 0 && nr < SIZE && nc >= 0 && nc < SIZE && matrix[nr][nc]) {
 
-                            matrix[nr][nc]->startPop(250.f, MARK_SCALE);
+                            matrix[nr][nc]->startPop(300.f, MARK_SCALE);
                         }
                     }
                 }
