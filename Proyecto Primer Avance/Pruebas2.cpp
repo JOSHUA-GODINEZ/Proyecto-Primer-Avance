@@ -194,7 +194,7 @@ private:
     // swap animation
     bool swapAnimating = false;
     bool pendingSwapCleaning = false;
-    float swapDurationMs = 120.f; // duración base del swap en ms (ajústalo)
+    float swapDurationMs = 200.f; // duración base del swap en ms (ajústalo)
 
    
 
@@ -335,6 +335,14 @@ public:
         marked[r][c] = true;
         if (forceBreakIce) forcedBreak[r][c] = true;
         removalPending = true;
+
+        if (animate && matrix[r][c]) {
+            matrix[r][c]->startPop(250.f, MARK_SCALE);
+           // printf("Iniciando animación en celda (%d, %d)\n", r, c);  // Depuración
+        }
+       /* else {
+            printf("No se inicia animación en celda (%d, %d): animate=%d, matrix[r][c]=%p\n", r, c, animate ? 1 : 0, (void*)matrix[r][c]);
+        }*/
     }
 
     bool detectCombinationsWithoutRemoving() {
@@ -817,38 +825,21 @@ public:
                 }
     }
 
-   
     void updateAnimations() {
-        float deltaMs = animClock.restart().asMilliseconds();
+        float deltaMs = animClock.restart().asMilliseconds();  // Como está ahora
         bool anyMoving = false;
 
         for (int r = 0; r < SIZE; ++r) {
             for (int c = 0; c < SIZE; ++c) {
-                if (!matrix[r][c]) continue;
+                if (matrix[r][c]) {
+                    matrix[r][c]->updateMove();  // Actualiza movimientos
+                    if (matrix[r][c]->isMoving()) anyMoving = true;
 
-                matrix[r][c]->updateMove();
-                if (matrix[r][c]->isMoving()) anyMoving = true;
-
-                if (matrix[r][c]->isPopActive()) {
-                    bool finished = matrix[r][c]->updatePop(deltaMs);
-                    if (finished) {
-                       
-                        if (BombFruit* b = dynamic_cast<BombFruit*>(matrix[r][c])) {
-                            b->onMatch(this, r, c); 
-                          
-                            markCellForRemoval(r, c, true);
-                           
-                            for (int rr = 0; rr < SIZE; ++rr) {
-                                for (int cc = 0; cc < SIZE; ++cc) {
-                                    if (marked[rr][cc] && matrix[rr][cc]) {
-
-                                        matrix[rr][cc]->startPop(250, 1.6f);
-                                    }
-                                }
-                            }
-                            startCleaning(true);
-                        }
-                        else {
+                    if (matrix[r][c]->isPopActive()) {
+                        bool finished = matrix[r][c]->updatePop(deltaMs);  // Pasa deltaMs
+                        if (finished) {
+                            // Código existente para manejar el final de la animación
+                            matrix[r][c]->onMatch(this, r, c);
                             markCellForRemoval(r, c, false);
                             startCleaning(true);
                         }
@@ -856,9 +847,9 @@ public:
                 }
             }
         }
+
         if (!anyMoving) {
             if (gravityAnimating) gravityAnimating = false;
-
             if (swapAnimating) {
                 swapAnimating = false;
                 if (pendingSwapCleaning) {
@@ -1076,12 +1067,12 @@ public:
 
 // ---------------------- BombFruit onMatch implementation ----------------------
 void BombFruit::onMatch(Board* board, int row, int col) {
-      for (int dr = -1; dr <= 1; ++dr) {
+    for (int dr = -1; dr <= 1; ++dr) {
         for (int dc = -1; dc <= 1; ++dc) {
             if (dr == 0 && dc == 0) continue;
             int nr = row + dr;
             int nc = col + dc;
-            board->markCellForRemoval(nr, nc, true); // forceBreak = true
+            board->markCellForRemoval(nr, nc, true, true);  // Agregado: animate = true
         }
     }
 }
@@ -1094,8 +1085,8 @@ int Board::getTypeAt(int r, int c) const {
 void SuperFruit::onMatch(Board* board, int row, int col) {
     int fullType = getType();
     int idx = -1;
-    if (fullType >= 7 && fullType <= 11) idx = fullType - 7; 
-    else if (fullType >= 0 && fullType <= 4) idx = fullType; 
+    if (fullType >= 7 && fullType <= 11) idx = fullType - 7;
+    else if (fullType >= 0 && fullType <= 4) idx = fullType;
 
     if (idx < 0) {
         return;
@@ -1105,31 +1096,37 @@ void SuperFruit::onMatch(Board* board, int row, int col) {
 
     auto tryMark = [&](int r, int c) {
         if (r >= 0 && r < N && c >= 0 && c < N) {
-            board->markCellForRemoval(r, c, true, true);
+            board->markCellForRemoval(r, c, true, true);  // animate = true
+      
         }
         };
 
     switch (idx) {
-    case 0: 
+    case 0:
+      
         for (int c = 0; c < N; ++c) tryMark(row, c);
         break;
 
-    case 1: 
+    case 1:
+     
         for (int r = 0; r < N; ++r) tryMark(r, col);
         break;
 
     case 2:
-        for (int c = 0; c < N; ++c) tryMark(row, c);
-        for (int r = 0; r < N; ++r) tryMark(r, col);
+
+        for (int c = 0; c < N; ++c) tryMark(row, c);  // Fila
+        for (int r = 0; r < N; ++r) tryMark(r, col);  // Columna
         break;
 
     case 3:
+
         for (int dr = -1; dr <= 1; ++dr)
             for (int dc = -1; dc <= 1; ++dc)
                 tryMark(row + dr, col + dc);
         break;
 
     case 4:
+  
         for (int r = 0; r < N; ++r) {
             for (int c = 0; c < N; ++c) {
                 int t = board->getTypeAt(r, c);
