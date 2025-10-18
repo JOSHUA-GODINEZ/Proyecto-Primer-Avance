@@ -114,7 +114,7 @@ public:
         bool cont = true;
         while (cont) {
             if (clearCombosOnce(false)) {
-                applyGravityAndReplace();
+                applyGravityInstantForInit();
             }
             else cont = false;
         }
@@ -848,7 +848,7 @@ public:
         bool cont = true;
         while (cont) {
             if (clearCombosOnce(false)) {
-                applyGravityAndReplace();
+                applyGravityInstantForInit();
             }
             else cont = false;
         }
