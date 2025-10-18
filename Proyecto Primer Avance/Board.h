@@ -114,7 +114,7 @@ public:
         bool cont = true;
         while (cont) {
             if (clearCombosOnce(false)) {
-                applyGravityInstantForInit();
+                applyGravityAndReplace();
             }
             else cont = false;
         }
@@ -188,11 +188,8 @@ public:
 
         if (animate && matrix[r][c]) {
             matrix[r][c]->startPop(300.f, MARK_SCALE);
-            // printf("Iniciando animación en celda (%d, %d)\n", r, c);  // Depuración
+           
         }
-        /* else {
-             printf("No se inicia animación en celda (%d, %d): animate=%d, matrix[r][c]=%p\n", r, c, animate ? 1 : 0, (void*)matrix[r][c]);
-         }*/
     }
 
     bool detectCombinationsWithoutRemoving() {
@@ -744,7 +741,6 @@ public:
         return true;
     }
 
-
     void startCleaning(bool countScore) {
         cleaningInProgress = true;
         countScoreDuringCleaning = countScore;
@@ -852,7 +848,7 @@ public:
         bool cont = true;
         while (cont) {
             if (clearCombosOnce(false)) {
-                applyGravityInstantForInit();
+                applyGravityAndReplace();
             }
             else cont = false;
         }
