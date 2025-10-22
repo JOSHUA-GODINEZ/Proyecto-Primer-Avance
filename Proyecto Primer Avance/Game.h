@@ -1,5 +1,5 @@
 #include "Board.h"
-// ---------------------- Game (UI + loop) ----------------------
+// Game (UI + loop)
 class Game {
 private:
     sf::RenderWindow window{ sf::VideoMode(800, 600), "Match-3" };
@@ -56,13 +56,13 @@ public:
         }
 
         if (!backgroundTexture.loadFromFile("C:\\Joshua\\Proyecto Primer Avance\\Assets\\Fruit background.png")) {
-            // optional: ignore
+         
         }
         backgroundSprite.setTexture(backgroundTexture);
         backgroundSprite.setPosition(124.f, 110.f);
 
         if (!menuTexture.loadFromFile("C:\\Joshua\\Proyecto Primer Avance\\Assets\\Menu background.png")) {
-            // optional
+           
         }
         menuSprite.setTexture(menuTexture);
         menuSprite.setPosition(0.f, 0.f);
@@ -449,4 +449,4 @@ public:
         }
     }
 };
-// ---------------------- main ----------------------
+

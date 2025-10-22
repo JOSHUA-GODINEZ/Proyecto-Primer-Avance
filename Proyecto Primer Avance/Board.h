@@ -32,19 +32,18 @@ private:
     int remainingMoves = 3; // fixes: default 10 and no variation by difficulty
     int score = 0;
     int level = 1;
-    int super = -1;            // ya lo tienes, -1 = ninguno
-    int superR = -1;      // fila donde queremos generar la super-fruta
-    int superC = -1;      // columna donde queremos generar la super-fruta
+    int super = -1;       
+    int superR = -1;      
+    int superC = -1;      
 
     // gravity animation
     bool gravityAnimating = false;
-    float gravityDurationMs = 1000.f; // requested ~900 ms
-
+    float gravityDurationMs = 500.f; 
 
     // swap animation
     bool swapAnimating = false;
     bool pendingSwapCleaning = false;
-    float swapDurationMs = 200.f; // duración base del swap en ms (ajústalo)
+    float swapDurationMs = 200.f; // duración base del swap en ms
 
 
 
@@ -53,13 +52,13 @@ private:
 
     int selectedRow = -1, selectedCol = -1;
 
-    // ---------------- Ajustes de probabilidades por nivel ----------------
+    //Ajustes de probabilidades por nivel
     int initBombChance[4] = { 0, 5, 3, 1 };   // índice 1..3 válido
     int initIceChance[4] = { 0, 5, 12, 20 };
     int refillBombChance[4] = { 0, 5, 3, 1 };
 
 
-    // ----------------- Objetivo del nivel -----------------
+   // Objetivo del nivel 
     // kinds: 1 = eliminar tipo normal X (count), 2 = eliminar hielos (count), 3 = alcanzar puntos
     int objectiveKind = 0;
     int objectiveTarget = 0;      // target count or target points
@@ -93,7 +92,7 @@ public:
                 marked[r][c] = comboMarked[r][c] = forcedBreak[r][c] = false;
             }
 
-        // Ahora: inicializar usando probabilidades del nivel actual (aquí el hielo sí puede aparecer)
+      
         for (int r = 0; r < SIZE; ++r) {
             for (int c = 0; c < SIZE; ++c) {
                 sf::Vector2f center = cellCenter(r, c);
@@ -146,7 +145,7 @@ public:
         }
     }
 
-    // llama cuando se borra una fruta (antes de delete) para actualizar objetivo
+    
     void incrementObjectiveOnDelete(int fruitType) {
         if (objectiveKind == 1) {
             // solo contar si es un normal del tipo objetivo
@@ -187,7 +186,7 @@ public:
         removalPending = true;
 
         if (animate && matrix[r][c]) {
-            matrix[r][c]->startPop(300.f, MARK_SCALE);
+            matrix[r][c]->startPop(500.f, MARK_SCALE);
            
         }
     }
@@ -333,7 +332,7 @@ public:
                                 bool wasSwapped = (r == lastSwapR1 && s == lastSwapC1) || (r == lastSwapR2 && s == lastSwapC2);
 
                                 if (cellType == ICE_INDEX) {
-                                    // solo marcar hielo si vino del swap (o si el run contiene swapped — ya garantizado arriba)
+                                    // solo marcar hielo si vino del swap
                                     if (wasSwapped) {
                                         markedLocal[r][s] = true;
                                         comboLocal[r][s] = true;
@@ -360,7 +359,7 @@ public:
                 }
             }
 
-            // verticals (robusto para hielo)
+            // verticals 
             for (int c = 0; c < SIZE; ++c) {
                 int r = 0;
                 while (r < SIZE) {
@@ -437,7 +436,7 @@ public:
                         comboMarked[r][c] = comboLocal[r][c];
                         if (marked[r][c] && matrix[r][c]) {
 
-                            matrix[r][c]->startPop(300.f, MARK_SCALE);
+                            matrix[r][c]->startPop(500.f, MARK_SCALE);
 
                         }
                     }
@@ -771,7 +770,7 @@ public:
             BombFruit* asBomb = dynamic_cast<BombFruit*>(matrix[row][col]);
             if (asBomb != nullptr) {
 
-                matrix[row][col]->startPop(300.f, MARK_SCALE);
+                matrix[row][col]->startPop(500.f, MARK_SCALE);
 
                 removalPending = true;
                 startCleaning(true);
@@ -781,7 +780,7 @@ public:
                         int nr = row + dr, nc = col + dc;
                         if (nr >= 0 && nr < SIZE && nc >= 0 && nc < SIZE && matrix[nr][nc]) {
 
-                            matrix[nr][nc]->startPop(300.f, MARK_SCALE);
+                            matrix[nr][nc]->startPop(500.f, MARK_SCALE);
                         }
                     }
                 }
@@ -910,21 +909,3 @@ public:
                 if (matrix[r][c]) matrix[r][c]->draw(win);
     }
 };
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

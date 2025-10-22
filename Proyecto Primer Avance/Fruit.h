@@ -4,14 +4,14 @@
 
 using namespace std;
 
-// ---------------------- Fruit & subclasses (con animación) ----------------------
+//Fruit & subclasses
 class Board; 
 
 class Fruit {
 protected:
     bool popActive = false;
     float popElapsedMs = 0.f;
-    float popDurationMs = 220.f;   // duración total de la animación
+    float popDurationMs = 200.f;   // duración total de la animación
     float popStartScale = 1.f;
     float popTargetScale = 1.35f;  // MARK_SCALE o lo que quieras
     bool pendingRemoval = false;
@@ -74,11 +74,11 @@ public:
         }
     }
 
-    void startPop(float duration_ms = 220.f, float targetScale = 1.5f) {
+    void startPop(float duration_ms = 100.f, float targetScale = 1.5f) {
         popActive = true;
         popElapsedMs = 0.f;
         popDurationMs = std::max(1.0f, duration_ms);
-        popStartScale = sprite.getScale().x; // asumimos x==y
+        popStartScale = sprite.getScale().x; 
         popTargetScale = targetScale;
         pendingRemoval = true;
     }
