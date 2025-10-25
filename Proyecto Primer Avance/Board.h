@@ -1,4 +1,4 @@
-#include "Fruit.h"
+ #include "Fruit.h"
 class Board {
 private:
     static constexpr int SIZE = 8;
@@ -31,6 +31,7 @@ private:
     // gameplay
     int remainingMoves = 3; // fixes: default 10 and no variation by difficulty
     int score = 0;
+    int acumalateScore=0;
     int level = 1;
     int super = -1;       
     int superR = -1;      
@@ -817,6 +818,7 @@ public:
             marked[r][c] = comboMarked[r][c] = forcedBreak[r][c] = false;
         }
         remainingMoves = 5;
+        acumalateScore = acumalateScore + score;
         score = 0;
         super = 0;
         cleaningInProgress = false;
@@ -855,6 +857,7 @@ public:
 
     // getters/setters
     int getScore() const { return score; }
+    int getAcumulateScore()const { return acumalateScore; }
     int getRemainingMoves() const { return remainingMoves; }
     bool hasMoves() const { return remainingMoves > 0; }
     void resetMoves(int n) { remainingMoves = n; }

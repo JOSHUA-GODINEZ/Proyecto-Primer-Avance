@@ -50,14 +50,14 @@ private:
     sf::Text userLabel;
     sf::RectangleShape userButton;
     std::string nombre;         // texto que escribe el usuario actualmente
-    sf::Text text;              // texto que se dibuja dentro del botón
+    sf::Text text,nombreU,pointU;              // texto que se dibuja dentro del botón
     sf::Clock cursorClock;      // cursor parpadeante
     bool isTyping = false;
 
     // Players stored in Lista<Jugador>
     Lista<Jugador> players;     // lista enlazada genérica
     size_t playersCount = 0;    // mantener conteo (Lista no ofrece tamaño)
-    const size_t maxPlayers = 10;
+    const size_t maxPlayers = 8;
     int selectedPlayerIndex = -1;
 
     // Menu UI
@@ -108,7 +108,7 @@ public:
         }
 
         // Cargar texturas (rutas de ejemplo)
-        userTexture.loadFromFile("C:\\Joshua\\practica\\Sprites\\granja6.png");
+        userTexture.loadFromFile("C:\\Joshua\\practica\\Sprites\\paisaje.jpg");
         backgroundTexture.loadFromFile("C:\\Joshua\\Proyecto Primer Avance\\Assets\\Fruit background.png");
         menuTexture.loadFromFile("C:\\Joshua\\Proyecto Primer Avance\\Assets\\Menu background.png");
 
@@ -120,7 +120,7 @@ public:
         menuSprite.setScale(1.1f, 1.45f);
 
         userSprite.setTexture(userTexture);
-        userSprite.setPosition(0.f, 0.f);
+        userSprite.setPosition(170.f, 0.f);
         userSprite.setScale(1.1f, 1.45f);
 
         // score/moves texts
@@ -133,10 +133,10 @@ public:
         userLabel.setCharacterSize(40);
         userLabel.setString("Ingrese Jugador:");
         userLabel.setFillColor(sf::Color::Black);
-        userLabel.setPosition(250.f, 10.f);
+        userLabel.setPosition(240.f, 10.f);
 
-        userButton.setSize(sf::Vector2f(220.f, 40.f));
-        userButton.setPosition(290.f, 70.f);
+        userButton.setSize(sf::Vector2f(240.f, 40.f));
+        userButton.setPosition(270.f, 70.f);
         userButton.setFillColor(sf::Color(200, 200, 200, 255));
         userButton.setOutlineThickness(3.f);
         userButton.setOutlineColor(sf::Color::Black);
@@ -146,6 +146,17 @@ public:
         text.setFillColor(sf::Color::Black);
         text.setPosition(userButton.getPosition().x + 8.f, userButton.getPosition().y + 6.f);
 
+        nombreU.setFont(font);
+        nombreU.setCharacterSize(24);
+        nombreU.setFillColor(sf::Color::Black);
+        nombreU.setPosition(100.f,200.f);
+        nombreU.setString("Nombre");
+
+        pointU.setFont(font);
+        pointU.setCharacterSize(24);
+        pointU.setFillColor(sf::Color::Black);
+        pointU.setPosition(200.f,200.f);
+        pointU.setString("Puntos");
 
         // Menu UI
         playButton.setSize(sf::Vector2f(250.f, 85.f));
@@ -283,7 +294,7 @@ public:
         hardSelected = false;
         easyB.setFillColor(sf::Color(100, 255, 100, 255));
         hardB.setFillColor(sf::Color(200, 200, 200, 255));
-        board.resetMoves(3); // default moves
+        board.resetMoves(1); // default moves
 
         window.setFramerateLimit(60);
     }
@@ -304,8 +315,8 @@ public:
 
             // Texto ingresado (TextEntered) mientras se escribe
             if (event.type == sf::Event::TextEntered && isTyping) {
-                if (event.text.unicode >= 32) { // espacio o printable
-                    if (nombre.size() < 80) { // límite de bytes aproximado
+                if (event.text.unicode >= 14) { // espacio o printable
+                    if (nombre.size() < 14) { // límite de bytes aproximado
                         sf::Uint32 codepoint = event.text.unicode;
                         if (codepoint < 0x80) {
                             nombre.push_back(static_cast<char>(codepoint));
@@ -343,14 +354,14 @@ public:
                             // si ya hay 10, sobrescribimos el último (opcional)
                             // eliminamos el primero y agregamos al final para mantener rotación
                             // Lista no tiene eliminar por índice, así que eliminamos por valor del primer nodo
-                            Nodo<Jugador>* cabeza = players.getCabeza();
-                            if (cabeza) {
-                                Jugador primero = cabeza->dato;
-                                players.eliminar(primero); // eliminar primer nodo
-                                players.agregarFinal(Jugador(nombre, 0));
-                                // playersCount se mantiene igual
-                                selectedPlayerIndex = static_cast<int>(playersCount) - 1;
-                            }
+                            //Nodo<Jugador>* cabeza = players.getCabeza();
+                            //if (cabeza) {
+                            //    Jugador primero = cabeza->dato;
+                            //    players.eliminar(primero); // eliminar primer nodo
+                            //    players.agregarFinal(Jugador(nombre, 0));
+                            //    // playersCount se mantiene igual
+                            //    selectedPlayerIndex = static_cast<int>(playersCount) - 1;
+                            //}
                         }
                         // pasar a MENU
                        // state = GameState::MENU;
@@ -374,9 +385,9 @@ public:
                         if (isTyping) isTyping = false;
                     }
 
-                    float playersX = 480.f;              // x inicio lista
-                    float playersY = 200.f;               // y inicio
-                    float playerW = 200.f, playerH = 36.f;
+                    float playersX = 210.f;              // x inicio lista
+                    float playersY = 150.f;               // y inicio
+                    float playerW = 250.f, playerH = 36.f;
                     float buttonW = 60.f, buttonH = 36.f;
                     float gapY = 10.f;
 
@@ -461,7 +472,7 @@ public:
                         hardSelected = false;
                         easyB.setFillColor(sf::Color(100, 255, 100, 255));
                         hardB.setFillColor(sf::Color(200, 200, 200, 255));
-                        board.resetMoves(5);
+                        board.resetMoves(1);
                         return;
                     }
                     if (board.getLevel() < 3 && nextLevelButton.getGlobalBounds().contains(world)) {
@@ -507,6 +518,11 @@ public:
     void render() {
         window.clear(sf::Color::White);
         if (state == GameState::USERS) {
+            if (menuTexture.getSize().x != 0 && menuTexture.getSize().y != 0) window.draw(menuSprite);
+            sf::RectangleShape overlay(sf::Vector2f(800.f, 600.f));
+            overlay.setFillColor(sf::Color(255, 255, 255, 200));
+            overlay.setPosition(0.f, 0.f);
+            window.draw(overlay);
             if (userTexture.getSize().x != 0 && userTexture.getSize().y != 0) window.draw(userSprite);
             window.draw(userLabel);
             window.draw(userButton);
@@ -521,15 +537,22 @@ public:
            
 
             // DIBUJAR LISTA DE JUGADORES A LA DERECHA
-            float playersX = 480.f;
-            float playersY = 200.f;
-            float playerW = 200.f, playerH = 36.f;
+            float playersX = 180.f;
+            float playersY = 150.f;
+            float playerW = 280.f, playerH = 36.f;
             float buttonW = 60.f, buttonH = 36.f;
             float gapY = 10.f;
+           
+
             sf::Text playerNameText;
             playerNameText.setFont(font);
             playerNameText.setCharacterSize(20);
             playerNameText.setFillColor(sf::Color::Black);
+
+            sf::Text Points;
+            Points.setFont(font);
+            Points.setCharacterSize(20);
+            Points.setFillColor(sf::Color::Black);
 
             Nodo<Jugador>* nodo = players.getCabeza();
             for (size_t i = 0; i < playersCount && nodo != nullptr; ++i, nodo = nodo->siguiente) {
@@ -540,14 +563,20 @@ public:
                 nameRect.setPosition(playersX, y);
                 nameRect.setFillColor(sf::Color(220, 220, 220));
                 nameRect.setOutlineThickness(2.f);
-                if (static_cast<int>(i) == selectedPlayerIndex) nameRect.setOutlineColor(sf::Color::Green);
-                else nameRect.setOutlineColor(sf::Color::Black);
+              //  if (static_cast<int>(i) == selectedPlayerIndex) nameRect.setOutlineColor(sf::Color::Green);
+                nameRect.setOutlineColor(sf::Color::Black);
                 window.draw(nameRect);
 
                 // texto del nombre dentro del rectángulo
                 playerNameText.setString(nodo->dato.nombre);
                 playerNameText.setPosition(playersX + 6.f, y + 6.f);
                 window.draw(playerNameText);
+
+                Points.setString(std::to_string(board.getAcumulateScore()));
+                Points.setPosition(400.f, y + 6.f);
+                window.draw(Points);
+
+
 
                 // botón a la derecha
                 sf::RectangleShape btn(sf::Vector2f(buttonW, buttonH));
@@ -592,7 +621,7 @@ public:
                 current.setFont(font);
                 current.setCharacterSize(20);
                 current.setFillColor(sf::Color::Black);
-                current.setString("Jugador: " + nombre);
+                current.setString("Jugador: " + nombre+ std::to_string(board.getScore()));
                 current.setPosition(10.f, 10.f);
                 window.draw(current);
             }
