@@ -3,10 +3,10 @@
 // Game (UI + loop)
 #ifndef GAME_H
 #define GAME_H
+#include <fstream>
 
-      // fmod
 
-// Clase Jugador que se almacenará en la lista
+// ---------------- Clase Jugador ----------------
 class Jugador {
 public:
     std::string nombre;
@@ -15,26 +15,25 @@ public:
     Jugador() : nombre(""), puntaje(0) {}
     Jugador(const std::string& n, int p = 0) : nombre(n), puntaje(p) {}
 
-    // operador == para eliminar por valor si se desea
     bool operator==(const Jugador& other) const {
         return nombre == other.nombre && puntaje == other.puntaje;
     }
 
-    // utilidad para depuración
     std::string toString() const {
         return nombre + " (" + std::to_string(puntaje) + ")";
     }
 };
 
-// Game (UI + loop)
+// ---------------- Clase Game ----------------
 class Game {
 private:
+    // Ventana y UI básica
     sf::RenderWindow window{ sf::VideoMode(800, 600), "Match-3" };
     sf::Font font;
     sf::Text scoreText, movesText, levelText;
     Board board;
 
-    // backgrounds
+    // Backgrounds
     sf::Texture backgroundTexture;
     sf::Sprite backgroundSprite;
     sf::Texture menuTexture;
@@ -42,21 +41,21 @@ private:
     sf::Texture userTexture;
     sf::Sprite userSprite;
 
-    // timing cleaning
+    // Timing
     sf::Clock cleaningClock;
     sf::Time cleaningDelay = sf::milliseconds(800);
 
     // Users UI
-    sf::Text userLabel;
-    sf::RectangleShape userButton;
-    std::string nombre;         // texto que escribe el usuario actualmente
-    sf::Text text,nombreU,pointU;              // texto que se dibuja dentro del botón
-    sf::Clock cursorClock;      // cursor parpadeante
+    sf::Text userLabel, listaLabel,Tprogress;
+    sf::RectangleShape userButton, progress;
+    std::string nombre;                // texto que escribe el usuario actualmente
+    sf::Text text, nombreU, pointU;    // textos auxiliares
+    sf::Clock cursorClock;             // cursor parpadeante
     bool isTyping = false;
 
     // Players stored in Lista<Jugador>
-    Lista<Jugador> players;     // lista enlazada genérica
-    size_t playersCount = 0;    // mantener conteo (Lista no ofrece tamaño)
+    Lista<Jugador> players;
+    size_t playersCount = 0;
     const size_t maxPlayers = 8;
     int selectedPlayerIndex = -1;
 
@@ -74,40 +73,160 @@ private:
     sf::Text leaveButtonText;
     sf::Text gameOverText;
 
-    // Next level button (aparece en GAME_OVER si level < 3)
+    // Next level button
     sf::RectangleShape nextLevelButton;
     sf::Text nextLevelText;
 
-    // Menu button in Game Over screen
+    // Menu button on Game Over
     sf::RectangleShape menuButton;
     sf::Text menuButtonText;
 
-
-    // difficulty
     bool hardSelected = false;
 
     enum class GameState { USERS, MENU, PLAYING, GAME_OVER };
     GameState state = GameState::USERS;
 
-    // Helper: borrar último carácter UTF-8
-    static void eraseLastUtf8Char(std::string &s) {
+    // Archivo XML donde se guardan jugadores
+    const std::string playersFilePath = "players.xml";
+
+    // ---------------- Helpers UTF-8 ----------------
+    static void eraseLastUtf8Char(std::string& s) {
         if (s.empty()) return;
         size_t i = s.size() - 1;
         while (i > 0 && (static_cast<unsigned char>(s[i]) & 0xC0) == 0x80) --i;
         s.erase(i);
     }
 
+    // ---------------- Helpers XML (escape/unescape) ----------------
+    static std::string escapeXml(const std::string& s) {
+        std::string out;
+        out.reserve(s.size());
+        for (char c : s) {
+            switch (c) {
+            case '&': out += "&amp;"; break;
+            case '<': out += "&lt;"; break;
+            case '>': out += "&gt;"; break;
+            case '"': out += "&quot;"; break;
+            case '\'': out += "&apos;"; break;
+            default: out += c;
+            }
+        }
+        return out;
+    }
+
+    static std::string unescapeXml(const std::string& s) {
+        std::string out;
+        out.reserve(s.size());
+        for (size_t i = 0; i < s.size(); ++i) {
+            if (s[i] == '&') {
+                if (s.compare(i, 5, "&amp;") == 0) { out += '&'; i += 4; }
+                else if (s.compare(i, 4, "&lt;") == 0) { out += '<'; i += 3; }
+                else if (s.compare(i, 4, "&gt;") == 0) { out += '>'; i += 3; }
+                else if (s.compare(i, 6, "&quot;") == 0) { out += '"'; i += 5; }
+                else if (s.compare(i, 6, "&apos;") == 0) { out += '\''; i += 5; }
+                else {
+                    out += '&';
+                }
+            }
+            else {
+                out += s[i];
+            }
+        }
+        return out;
+    }
+
+    // ---------------- Guardar / Cargar XML (sin librerías) ----------------
+    void savePlayersToFile() {
+        std::ofstream f(playersFilePath, std::ofstream::out | std::ofstream::trunc);
+        if (!f.is_open()) {
+            std::cerr << "No se pudo abrir " << playersFilePath << " para guardar.\n";
+            return;
+        }
+        f << "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
+        f << "<players>\n";
+
+        Nodo<Jugador>* nodo = players.getCabeza();
+        while (nodo) {
+            std::string nameEsc = escapeXml(nodo->dato.nombre);
+            int score = nodo->dato.puntaje;
+            f << "  <player>\n";
+            f << "    <name>" << nameEsc << "</name>\n";
+            f << "    <score>" << score << "</score>\n";
+            f << "  </player>\n";
+            nodo = nodo->siguiente;
+        }
+
+        f << "</players>\n";
+        f.close();
+    }
+
+    void loadPlayersFromFile() {
+        std::ifstream f(playersFilePath);
+        if (!f.is_open()) {
+            // no existe => comenzamos con lista vacía
+            return;
+        }
+
+        // Leer todo a string
+        std::string content;
+        f.seekg(0, std::ios::end);
+        content.reserve((size_t)f.tellg());
+        f.seekg(0, std::ios::beg);
+        content.assign((std::istreambuf_iterator<char>(f)), std::istreambuf_iterator<char>());
+        f.close();
+
+        players.vaciar();
+        playersCount = 0;
+
+        size_t pos = 0;
+        while (playersCount < maxPlayers) {
+            size_t pstart = content.find("<player", pos);
+            if (pstart == std::string::npos) break;
+            size_t pclose = content.find(">", pstart);
+            if (pclose == std::string::npos) break;
+            size_t pend = content.find("</player>", pclose);
+            if (pend == std::string::npos) break;
+
+            std::string block = content.substr(pclose + 1, pend - (pclose + 1));
+
+            std::string name;
+            size_t n1 = block.find("<name>");
+            size_t n2 = block.find("</name>");
+            if (n1 != std::string::npos && n2 != std::string::npos && n2 > n1) {
+                name = block.substr(n1 + 6, n2 - (n1 + 6));
+                name = unescapeXml(name);
+            }
+
+            int score = 0;
+            size_t s1 = block.find("<score>");
+            size_t s2 = block.find("</score>");
+            if (s1 != std::string::npos && s2 != std::string::npos && s2 > s1) {
+                std::string sc = block.substr(s1 + 7, s2 - (s1 + 7));
+                try { score = std::stoi(sc); }
+                catch (...) { score = 0; }
+            }
+
+            if (!name.empty()) {
+                players.agregarFinal(Jugador(name, score));
+                playersCount++;
+            }
+
+            pos = pend + 9; // después de </player>
+        }
+    }
+
 public:
     Game() : board() {
+        // Configuración view
         sf::View view(sf::FloatRect(0.f, 0.f, 800.f, 600.f));
         window.setView(view);
 
-        // Cargar fuente (ajusta ruta si es necesario)
+        // Fuente (ajusta ruta si hace falta)
         if (!font.loadFromFile("C:\\Joshua\\Proyecto Primer Avance\\Assets\\Arimo-font.ttf")) {
             std::cerr << "Failed to load font (ajusta la ruta)\n";
         }
 
-        // Cargar texturas (rutas de ejemplo)
+        // Cargar texturas (ajusta rutas)
         userTexture.loadFromFile("C:\\Joshua\\practica\\Sprites\\paisaje.jpg");
         backgroundTexture.loadFromFile("C:\\Joshua\\Proyecto Primer Avance\\Assets\\Fruit background.png");
         menuTexture.loadFromFile("C:\\Joshua\\Proyecto Primer Avance\\Assets\\Menu background.png");
@@ -123,7 +242,7 @@ public:
         userSprite.setPosition(170.f, 0.f);
         userSprite.setScale(1.1f, 1.45f);
 
-        // score/moves texts
+        // Textos score/moves
         scoreText.setFont(font); scoreText.setCharacterSize(20); scoreText.setFillColor(sf::Color::Black); scoreText.setPosition(20.f, 30.f);
         movesText.setFont(font); movesText.setCharacterSize(20); movesText.setFillColor(sf::Color::Black); movesText.setPosition(10.f, 10.f);
         levelText.setFont(font); levelText.setCharacterSize(20); levelText.setFillColor(sf::Color::Black); levelText.setPosition(520.f, 10.f);
@@ -146,19 +265,26 @@ public:
         text.setFillColor(sf::Color::Black);
         text.setPosition(userButton.getPosition().x + 8.f, userButton.getPosition().y + 6.f);
 
+        // Labels de la lista
         nombreU.setFont(font);
-        nombreU.setCharacterSize(24);
+        nombreU.setCharacterSize(20);
         nombreU.setFillColor(sf::Color::Black);
-        nombreU.setPosition(100.f,200.f);
+        nombreU.setPosition(180.f, 155.f);
         nombreU.setString("Nombre");
 
         pointU.setFont(font);
-        pointU.setCharacterSize(24);
+        pointU.setCharacterSize(20);
         pointU.setFillColor(sf::Color::Black);
-        pointU.setPosition(200.f,200.f);
+        pointU.setPosition(375.f, 155.f);
         pointU.setString("Puntos");
 
-        // Menu UI
+        listaLabel.setFont(font);
+        listaLabel.setCharacterSize(30);
+        listaLabel.setFillColor(sf::Color::Black);
+        listaLabel.setPosition(250.f, 120.f);
+        listaLabel.setString("Lista de jugadores");
+
+        // Menu UI: play button, title, difficulty, boxes...
         playButton.setSize(sf::Vector2f(250.f, 85.f));
         playButton.setPosition(280.f, 150.f);
         playButton.setFillColor(sf::Color(100, 255, 100, 255));
@@ -175,6 +301,18 @@ public:
         titleText.setFillColor(sf::Color::Black);
         titleText.setPosition(270.f, 20.f);
 
+        progress.setSize(sf::Vector2f(220.f, 60.f));
+        progress.setPosition(500.f, 500.f);
+        progress.setFillColor(sf::Color(200, 200, 200, 255));
+        progress.setOutlineThickness(3.f);
+        progress.setOutlineColor(sf::Color::Black);
+
+        Tprogress.setFont(font);
+        Tprogress.setCharacterSize(42);
+        Tprogress.setString("Progreso");
+        Tprogress.setFillColor(sf::Color::Black);
+        Tprogress.setPosition(progress.getPosition().x + 10.f, progress.getPosition().y);
+
         dificulty.setFont(font);
         dificulty.setCharacterSize(40);
         dificulty.setString("DIFICULTAD");
@@ -186,6 +324,7 @@ public:
         easyB.setFillColor(sf::Color(200, 200, 200, 255));
         easyB.setOutlineThickness(3.f);
         easyB.setOutlineColor(sf::Color::Black);
+
 
         easy.setFont(font);
         easy.setCharacterSize(45);
@@ -229,7 +368,7 @@ public:
         playerT.setFillColor(sf::Color::Black);
         playerT.setPosition(playersBox.getPosition().x + 10.f, playersBox.getPosition().y);
 
-        // GAME OVER
+        // GAME OVER UI
         retryButton.setSize(sf::Vector2f(180.f, 60.f));
         retryButton.setOrigin(retryButton.getSize() / 2.f);
         retryButton.setPosition(230.f, 460.f);
@@ -262,7 +401,7 @@ public:
         gameOverText.setFillColor(sf::Color::Black);
         gameOverText.setPosition(230.f, 30.f);
 
-        // NEXT LEVEL button
+        // NEXT LEVEL
         nextLevelButton.setSize(sf::Vector2f(250.f, 80.f));
         nextLevelButton.setOrigin(nextLevelButton.getSize() / 2.f);
         nextLevelButton.setPosition(400.f, 270.f);
@@ -290,19 +429,31 @@ public:
         menuButtonText.setFillColor(sf::Color::Black);
         menuButtonText.setPosition(menuButton.getPosition().x - 95.f, menuButton.getPosition().y - 12.f);
 
-        // Default difficulty: FACIL selected
+        // Default difficulty
         hardSelected = false;
         easyB.setFillColor(sf::Color(100, 255, 100, 255));
         hardB.setFillColor(sf::Color(200, 200, 200, 255));
-        board.resetMoves(1); // default moves
+        board.resetMoves(1);
 
         window.setFramerateLimit(60);
+
+        // Cargar players desde archivo (si existe)
+        loadPlayersFromFile();
     }
 
+    ~Game() {
+        // Guardar players al destruir (por si el cierre no pasó por Event::Closed)
+        savePlayersToFile();
+    }
+
+    // ---------------- Process events ----------------
     void processEvents() {
         sf::Event event;
         while (window.pollEvent(event)) {
-            if (event.type == sf::Event::Closed) window.close();
+            if (event.type == sf::Event::Closed) {
+                savePlayersToFile();
+                window.close();
+            }
 
             if (event.type == sf::Event::Resized) {
                 sf::View view(sf::FloatRect(0.f, 0.f, 800.f, 600.f));
@@ -315,19 +466,22 @@ public:
 
             // Texto ingresado (TextEntered) mientras se escribe
             if (event.type == sf::Event::TextEntered && isTyping) {
-                if (event.text.unicode >= 14) { // espacio o printable
-                    if (nombre.size() < 14) { // límite de bytes aproximado
+                if (event.text.unicode >= 32) { // caracteres imprimibles incluido espacio
+                    if (nombre.size() < 40) { // límite de bytes aproximado
                         sf::Uint32 codepoint = event.text.unicode;
                         if (codepoint < 0x80) {
                             nombre.push_back(static_cast<char>(codepoint));
-                        } else if (codepoint < 0x800) {
+                        }
+                        else if (codepoint < 0x800) {
                             nombre.push_back(static_cast<char>(0xC0 | (codepoint >> 6)));
                             nombre.push_back(static_cast<char>(0x80 | (codepoint & 0x3F)));
-                        } else if (codepoint < 0x10000) {
+                        }
+                        else if (codepoint < 0x10000) {
                             nombre.push_back(static_cast<char>(0xE0 | (codepoint >> 12)));
                             nombre.push_back(static_cast<char>(0x80 | ((codepoint >> 6) & 0x3F)));
                             nombre.push_back(static_cast<char>(0x80 | (codepoint & 0x3F)));
-                        } else {
+                        }
+                        else {
                             nombre.push_back(static_cast<char>(0xF0 | (codepoint >> 18)));
                             nombre.push_back(static_cast<char>(0x80 | ((codepoint >> 12) & 0x3F)));
                             nombre.push_back(static_cast<char>(0x80 | ((codepoint >> 6) & 0x3F)));
@@ -341,32 +495,25 @@ public:
             if (event.type == sf::Event::KeyPressed && isTyping) {
                 if (event.key.code == sf::Keyboard::BackSpace) {
                     eraseLastUtf8Char(nombre);
-                } else if (event.key.code == sf::Keyboard::Return) {
+                }
+                else if (event.key.code == sf::Keyboard::Return) {
                     // finalizar edición y guardar en la lista
                     isTyping = false;
                     if (!nombre.empty()) {
-                        // evitar duplicados: opcional (aquí permitimos duplicados)
                         if (playersCount < maxPlayers) {
                             players.agregarFinal(Jugador(nombre, 0));
                             playersCount++;
                             selectedPlayerIndex = static_cast<int>(playersCount) - 1;
-                        } else {
-                            // si ya hay 10, sobrescribimos el último (opcional)
-                            // eliminamos el primero y agregamos al final para mantener rotación
-                            // Lista no tiene eliminar por índice, así que eliminamos por valor del primer nodo
-                            //Nodo<Jugador>* cabeza = players.getCabeza();
-                            //if (cabeza) {
-                            //    Jugador primero = cabeza->dato;
-                            //    players.eliminar(primero); // eliminar primer nodo
-                            //    players.agregarFinal(Jugador(nombre, 0));
-                            //    // playersCount se mantiene igual
-                            //    selectedPlayerIndex = static_cast<int>(playersCount) - 1;
-                            //}
+                            // persistir inmediatamente
+                            savePlayersToFile();
                         }
-                        // pasar a MENU
-                       // state = GameState::MENU;
+                        else {
+                            // Si la lista está llena, no añadimos; podrías sobrescribir o desplazar si quieres
+                        }
+                        // mantener en USERS (no cambiamos state)
                     }
-                } else if (event.key.code == sf::Keyboard::Escape) {
+                }
+                else if (event.key.code == sf::Keyboard::Escape) {
                     isTyping = false;
                 }
             }
@@ -381,50 +528,78 @@ public:
                         isTyping = true;
                         nombre.clear();
                         cursorClock.restart();
-                    } else {
+                    }
+                    else {
                         if (isTyping) isTyping = false;
                     }
 
-                    float playersX = 210.f;              // x inicio lista
-                    float playersY = 150.f;               // y inicio
-                    float playerW = 250.f, playerH = 36.f;
-                    float buttonW = 60.f, buttonH = 36.f;
+                    // Parámetros de layout — usar las mismas posiciones que en render()
+                    float playersX = 180.f;
+                    float playersY = 180.f;
+                    float playerW = 280.f, playerH = 36.f;
+                    float buttonW = 50.f, buttonH = 35.f;
                     float gapY = 10.f;
+                    float btn1X = playersX + playerW + 8.f;    // botón MENU (azul)
+                    float btn2X = playersX + playerW + 65.f;   // botón Eliminar (rojo)
 
-                    // recorrer la lista enlazada y calcular rects
                     Nodo<Jugador>* nodo = players.getCabeza();
                     for (size_t i = 0; i < playersCount && nodo != nullptr; ++i, nodo = nodo->siguiente) {
                         float y = playersY + i * (playerH + gapY);
                         sf::FloatRect nameRect(playersX, y, playerW, playerH);
-                        sf::FloatRect btnRect(playersX + playerW + 8.f, y, buttonW, buttonH);
+                        sf::FloatRect btnRect(btn1X, y, buttonW, buttonH);
+                        sf::FloatRect btnRect2(btn2X, y, buttonW, buttonH);
 
                         if (nameRect.contains(world)) {
+                            // seleccionar nombre (solo visual)
                             nombre = nodo->dato.nombre;
                             selectedPlayerIndex = static_cast<int>(i);
                             break;
                         }
+
                         if (btnRect.contains(world)) {
-                            // acción del botón: selecciona el jugador y puede iniciar menú/partida
+                            // botón azul: seleccionar y pasar a MENU
                             nombre = nodo->dato.nombre;
                             selectedPlayerIndex = static_cast<int>(i);
-                            // por defecto nos quedamos en MENU; si quieres iniciar jugar:
                             state = GameState::MENU;
                             break;
                         }
+
+                        if (btnRect2.contains(world)) {
+                            // botón rojo: eliminar ESTE jugador
+                            // Guardar el nombre antes de eliminar para comparaciones/ajustes
+                            Jugador toRemove = nodo->dato;
+
+                            bool removed = players.eliminar(toRemove);
+                            if (removed) {
+                                if (playersCount > 0) playersCount--;
+
+                                if (selectedPlayerIndex == static_cast<int>(i)) {
+                                    selectedPlayerIndex = -1;
+                                    nombre.clear();
+                                }
+                                else if (selectedPlayerIndex > static_cast<int>(i)) {
+                                    selectedPlayerIndex--;
+                                }
+
+                                // persistir inmediatamente
+                                savePlayersToFile();
+                            }
+                            // romper para no iterar con puntero invalidado
+                            break;
+                        }
                     }
-                   
                 }
                 else if (state == GameState::MENU) {
                     if (playButton.getGlobalBounds().contains(world)) {
-                        // Si se presiona JUGAR, iniciar jugando con el nombre seleccionado (si hay)
                         if (!nombre.empty()) {
                             board.resetBoard();
                             state = GameState::PLAYING;
                         }
                     }
 
-                    if (playersBox.getGlobalBounds().contains(world)) { state = GameState::USERS; }
-
+                    if (playersBox.getGlobalBounds().contains(world)) {
+                        state = GameState::USERS;
+                    }
 
                     if (easyB.getGlobalBounds().contains(world)) {
                         hardSelected = false;
@@ -436,15 +611,16 @@ public:
                         hardB.setFillColor(sf::Color(100, 255, 100, 255));
                         easyB.setFillColor(sf::Color(200, 200, 200, 255));
                     }
-                    if (outB.getGlobalBounds().contains(world)) window.close();
-
-                    // detectar clicks sobre la lista de jugadores a la derecha
-                   
+                    if (outB.getGlobalBounds().contains(world)) {
+                        savePlayersToFile();
+                        window.close();
+                    }
                 }
                 else if (state == GameState::PLAYING) {
                     if (board.isCleaning()) {
                         // ignore clicks mientras limpia
-                    } else {
+                    }
+                    else {
                         if (!board.hasMoves()) continue;
                         int x = event.mouseButton.x;
                         int y = event.mouseButton.y;
@@ -462,6 +638,7 @@ public:
                         return;
                     }
                     if (leaveButton.getGlobalBounds().contains(world)) {
+                        savePlayersToFile();
                         window.close();
                         return;
                     }
@@ -491,6 +668,7 @@ public:
         } // fin while pollEvent
     }
 
+    // ---------------- Update ----------------
     void update() {
         if (state == GameState::PLAYING) {
             board.updateAnimations();
@@ -515,34 +693,40 @@ public:
         }
     }
 
+    // ---------------- Render ----------------
     void render() {
         window.clear(sf::Color::White);
+
         if (state == GameState::USERS) {
             if (menuTexture.getSize().x != 0 && menuTexture.getSize().y != 0) window.draw(menuSprite);
+
             sf::RectangleShape overlay(sf::Vector2f(800.f, 600.f));
             overlay.setFillColor(sf::Color(255, 255, 255, 200));
             overlay.setPosition(0.f, 0.f);
             window.draw(overlay);
+
             if (userTexture.getSize().x != 0 && userTexture.getSize().y != 0) window.draw(userSprite);
             window.draw(userLabel);
             window.draw(userButton);
+            window.draw(listaLabel);
+            window.draw(nombreU);
+            window.draw(pointU);
 
-            // preparar cadena a mostrar (cursor parpadeante)
+            // Cursor parpadeante
             bool drawCursor = isTyping && (std::fmod(cursorClock.getElapsedTime().asSeconds(), 1.0f) < 0.5f);
             std::string display = nombre;
             if (drawCursor) display += "_";
             text.setString(display);
             window.draw(text);
 
-           
-
-            // DIBUJAR LISTA DE JUGADORES A LA DERECHA
+            // DIBUJAR LISTA DE JUGADORES
             float playersX = 180.f;
-            float playersY = 150.f;
+            float playersY = 180.f;
             float playerW = 280.f, playerH = 36.f;
-            float buttonW = 60.f, buttonH = 36.f;
+            float buttonW = 50.f, buttonH = 35.f;
             float gapY = 10.f;
-           
+            float btn1X = playersX + playerW + 8.f;
+            float btn2X = playersX + playerW + 65.f;
 
             sf::Text playerNameText;
             playerNameText.setFont(font);
@@ -563,43 +747,55 @@ public:
                 nameRect.setPosition(playersX, y);
                 nameRect.setFillColor(sf::Color(220, 220, 220));
                 nameRect.setOutlineThickness(2.f);
-              //  if (static_cast<int>(i) == selectedPlayerIndex) nameRect.setOutlineColor(sf::Color::Green);
                 nameRect.setOutlineColor(sf::Color::Black);
                 window.draw(nameRect);
 
-                // texto del nombre dentro del rectángulo
+                // texto del nombre
                 playerNameText.setString(nodo->dato.nombre);
                 playerNameText.setPosition(playersX + 6.f, y + 6.f);
                 window.draw(playerNameText);
 
-                Points.setString(std::to_string(board.getAcumulateScore()));
-                Points.setPosition(400.f, y + 6.f);
+                // puntos (del jugador)
+                Points.setString(std::to_string(nodo->dato.puntaje));
+                Points.setPosition(375.f, y + 6.f);
                 window.draw(Points);
 
-
-
-                // botón a la derecha
+                // botón azul (MENU)
                 sf::RectangleShape btn(sf::Vector2f(buttonW, buttonH));
-                btn.setPosition(playersX + playerW + 8.f, y);
+                btn.setPosition(btn1X, y);
                 btn.setFillColor(sf::Color(100, 200, 255));
                 btn.setOutlineThickness(2.f);
                 btn.setOutlineColor(sf::Color::Black);
                 window.draw(btn);
 
-                // texto del botón ("MENU")
                 sf::Text btnText;
                 btnText.setFont(font);
-                btnText.setCharacterSize(18);
+                btnText.setCharacterSize(14);
                 btnText.setFillColor(sf::Color::Black);
                 btnText.setString("MENU");
-                float bx = playersX + playerW + 8.f + (buttonW - btnText.getLocalBounds().width) / 2.f - 4.f;
+                float bx = btn1X + (buttonW - btnText.getLocalBounds().width) / 2.f - 4.f;
                 float by = y + (buttonH - btnText.getCharacterSize()) / 2.f - 2.f;
                 btnText.setPosition(bx, by);
                 window.draw(btnText);
 
+                // botón rojo Eliminar
+                sf::RectangleShape btn2(sf::Vector2f(buttonW, buttonH));
+                btn2.setPosition(btn2X, y);
+                btn2.setFillColor(sf::Color(200, 0, 0));
+                btn2.setOutlineThickness(2.f);
+                btn2.setOutlineColor(sf::Color::Black);
+                window.draw(btn2);
+
+                sf::Text btnText2;
+                btnText2.setFont(font);
+                btnText2.setCharacterSize(12);
+                btnText2.setFillColor(sf::Color::Black);
+                btnText2.setString("Eliminar");
+                float bx2 = btn2X + (buttonW - btnText2.getLocalBounds().width) / 2.f - 4.f;
+                float by2 = y + (buttonH - btnText2.getCharacterSize()) / 2.f - 2.f;
+                btnText2.setPosition(bx2, by2);
+                window.draw(btnText2);
             }
-
-
         }
         else if (state == GameState::MENU) {
             if (menuTexture.getSize().x != 0 && menuTexture.getSize().y != 0) window.draw(menuSprite);
@@ -615,30 +811,27 @@ public:
             window.draw(outText);
             window.draw(playersBox);
             window.draw(playerT);
-
+            window.draw(progress);
+            window.draw(Tprogress);
             if (!nombre.empty()) {
                 sf::Text current;
                 current.setFont(font);
                 current.setCharacterSize(20);
                 current.setFillColor(sf::Color::Black);
-                current.setString("Jugador: " + nombre+ std::to_string(board.getScore()));
-                current.setPosition(10.f, 10.f);
+                current.setString("Jugador: " + nombre);
+                current.setPosition(5.f, 10.f);
                 window.draw(current);
             }
-            // Mostrar el nombre actualmente seleccionado (arriba a la derecha)
-          
         }
         else if (state == GameState::PLAYING) {
             if (menuTexture.getSize().x != 0 && menuTexture.getSize().y != 0) window.draw(menuSprite);
             if (backgroundTexture.getSize().x != 0 && backgroundTexture.getSize().y != 0) window.draw(backgroundSprite);
             board.draw(window);
 
-            // draw texts
             window.draw(scoreText);
             window.draw(movesText);
             window.draw(levelText);
 
-            // draw objective top-right
             sf::Text objTitle, objProgress;
             objTitle.setFont(font);
             objTitle.setCharacterSize(18);
@@ -652,7 +845,6 @@ public:
 
             std::string desc = board.getObjectiveDescription();
             std::string prog = board.getObjectiveProgressText();
-
             objProgress.setString(" " + desc + "\n" + prog);
             objProgress.setPosition(605.f, 35.f);
 
@@ -686,7 +878,8 @@ public:
             if (objectiveExists) {
                 if (objectiveComplete) resultText.setString("OBJETIVO CUMPLIDO");
                 else resultText.setString("OBJETIVO FALLIDO");
-            } else resultText.setString("");
+            }
+            else resultText.setString("");
             resultText.setPosition(110.f, 140.f);
             window.draw(resultText);
 
@@ -694,7 +887,8 @@ public:
                 if (!hardSelected) {
                     window.draw(nextLevelButton);
                     window.draw(nextLevelText);
-                } else {
+                }
+                else {
                     if (objectiveComplete) {
                         window.draw(nextLevelButton);
                         window.draw(nextLevelText);
@@ -730,6 +924,7 @@ public:
         window.display();
     }
 
+    // ---------------- Run ----------------
     void run() {
         while (window.isOpen()) {
             processEvents();
