@@ -36,7 +36,7 @@ private:
     int super = -1;       
     int superR = -1;      
     int superC = -1;      
-
+    int reiniciar = 0;
     // gravity animation
     bool gravityAnimating = false;
     float gravityDurationMs = 500.f; 
@@ -817,8 +817,8 @@ public:
         for (int r = 0; r < SIZE; ++r) for (int c = 0; c < SIZE; ++c) {
             marked[r][c] = comboMarked[r][c] = forcedBreak[r][c] = false;
         }
-        remainingMoves = 5;
-        acumalateScore = acumalateScore + score;
+        remainingMoves = 3;
+       
         score = 0;
         super = 0;
         cleaningInProgress = false;
@@ -857,7 +857,31 @@ public:
 
     // getters/setters
     int getScore() const { return score; }
-    int getAcumulateScore()const { return acumalateScore; }
+  
+    int getAcumulateScore() {
+        int acumulateSocereLevel[3];
+        if (getLevel() == 1) {
+            acumulateSocereLevel[0] = score;
+           acumalateScore = acumulateSocereLevel[0];
+        }else if (getLevel() == 2) {
+            if (reiniciar >0) {
+                acumalateScore = acumalateScore - acumulateSocereLevel[1];
+            }
+            acumulateSocereLevel[1] = score;
+            acumalateScore = acumalateScore+ acumulateSocereLevel[1];
+            reiniciar++;
+        }
+        else if (getLevel() == 3) {
+            acumulateSocereLevel[2] = 0 + score;
+        }
+        
+        
+        return acumalateScore;
+        
+        
+        
+      
+    }
     int getRemainingMoves() const { return remainingMoves; }
     bool hasMoves() const { return remainingMoves > 0; }
     void resetMoves(int n) { remainingMoves = n; }

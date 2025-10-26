@@ -13,16 +13,17 @@ public:
     int puntaje;
 
     Jugador() : nombre(""), puntaje(0) {}
-    Jugador(const std::string& n, int p = 0) : nombre(n), puntaje(p) {}
+    Jugador(const std::string& n, int p) : nombre(n), puntaje(p) {}
 
     bool operator==(const Jugador& other) const {
-        return nombre == other.nombre && puntaje == other.puntaje;
+        return nombre == other.nombre;
     }
 
     std::string toString() const {
         return nombre + " (" + std::to_string(puntaje) + ")";
     }
 };
+
 
 // ---------------- Clase Game ----------------
 class Game {
@@ -88,6 +89,7 @@ private:
 
     // Archivo XML donde se guardan jugadores
     const std::string playersFilePath = "players.xml";
+
 
     // ---------------- Helpers UTF-8 ----------------
     static void eraseLastUtf8Char(std::string& s) {
@@ -501,17 +503,13 @@ public:
                     isTyping = false;
                     if (!nombre.empty()) {
                         if (playersCount < maxPlayers) {
-                            players.agregarFinal(Jugador(nombre, 0));
+                            players.agregarFinal(Jugador(nombre, 0)); // empieza con 0
                             playersCount++;
                             selectedPlayerIndex = static_cast<int>(playersCount) - 1;
-                            // persistir inmediatamente
                             savePlayersToFile();
                         }
-                        else {
-                            // Si la lista está llena, no añadimos; podrías sobrescribir o desplazar si quieres
-                        }
-                        // mantener en USERS (no cambiamos state)
                     }
+
                 }
                 else if (event.key.code == sf::Keyboard::Escape) {
                     isTyping = false;
@@ -549,12 +547,13 @@ public:
                         sf::FloatRect btnRect(btn1X, y, buttonW, buttonH);
                         sf::FloatRect btnRect2(btn2X, y, buttonW, buttonH);
 
-                        if (nameRect.contains(world)) {
-                            // seleccionar nombre (solo visual)
-                            nombre = nodo->dato.nombre;
-                            selectedPlayerIndex = static_cast<int>(i);
-                            break;
-                        }
+                        //if (nameRect.contains(world)) {
+                        //    // seleccionar nombre (solo visual)
+                        //    nombre = nodo->dato.nombre;
+             
+                        //    selectedPlayerIndex = static_cast<int>(i);
+                        //    break;
+                        //}
 
                         if (btnRect.contains(world)) {
                             // botón azul: seleccionar y pasar a MENU
@@ -670,6 +669,9 @@ public:
 
     // ---------------- Update ----------------
     void update() {
+       
+
+
         if (state == GameState::PLAYING) {
             board.updateAnimations();
             if (board.isGravityAnimating()) {
@@ -682,8 +684,26 @@ public:
                 }
             }
             if (!board.hasMoves() && board.isIdle()) {
+                // Sumar puntaje del tablero al jugador seleccionado
+                if (selectedPlayerIndex >= 0 && static_cast<size_t>(selectedPlayerIndex) < playersCount) {
+                    Nodo<Jugador>* nodo = players.getCabeza();
+                    size_t idx = 0;
+                    while (nodo != nullptr && idx < static_cast<size_t>(selectedPlayerIndex)) {
+                        nodo = nodo->siguiente;
+                        ++idx;
+                    }
+
+                    if (nodo != nullptr) {
+                        int partidaScore = board.getAcumulateScore();
+                        nodo->dato.puntaje = partidaScore; // sumamos al jugador
+                        savePlayersToFile(); // guardamos en el XML
+                    }
+                }
+
                 state = GameState::GAME_OVER;
             }
+
+
             scoreText.setString("PUNTUACIÓN: " + std::to_string(board.getScore()));
             movesText.setString("MOVIMIENTOS: " + std::to_string(board.getRemainingMoves()));
 
