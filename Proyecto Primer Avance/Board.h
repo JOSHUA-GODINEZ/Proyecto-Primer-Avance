@@ -1,4 +1,6 @@
  #include "Fruit.h"
+// #include "Game.h"
+#include "Lista.h"
 class Board {
 private:
     static constexpr int SIZE = 8;
@@ -9,7 +11,7 @@ private:
 
     Fruit* matrix[8][8];
     sf::Texture textures[12];
-
+   // Game G;
     // layout logical
     const float originX = 121.f;
     const float originY = 109.f;
@@ -32,7 +34,8 @@ private:
     int remainingMoves = 3; // fixes: default 10 and no variation by difficulty
     int score = 0;
     int acumalateScore=0;
-    int level = 1;
+    int acumulateSocereLevel[3] = {0,0,0};
+    int level =1;
     int super = -1;       
     int superR = -1;      
     int superC = -1;      
@@ -818,7 +821,7 @@ public:
             marked[r][c] = comboMarked[r][c] = forcedBreak[r][c] = false;
         }
         remainingMoves = 3;
-       
+      //  level = getLevel();
         score = 0;
         super = 0;
         cleaningInProgress = false;
@@ -857,9 +860,9 @@ public:
 
     // getters/setters
     int getScore() const { return score; }
-  
+   
     int getAcumulateScore() {
-        int acumulateSocereLevel[3];
+      
         if (getLevel() == 1) {
             acumulateSocereLevel[0] = score;
            acumalateScore = acumulateSocereLevel[0];
@@ -868,7 +871,7 @@ public:
                 acumalateScore = acumalateScore - acumulateSocereLevel[1];
             }
             acumulateSocereLevel[1] = score;
-            acumalateScore = acumalateScore+ acumulateSocereLevel[1];
+            acumalateScore = acumalateScore + acumulateSocereLevel[1];
             reiniciar++;
         }
         else if (getLevel() == 3) {
@@ -882,11 +885,12 @@ public:
         
       
     }
+    void setReiniciar() { reiniciar = 0; }
     int getRemainingMoves() const { return remainingMoves; }
     bool hasMoves() const { return remainingMoves > 0; }
     void resetMoves(int n) { remainingMoves = n; }
     int getLevel() const { return level; }
-    void setLevelPublic(int l) { setLevel(l); }
+    void setLevelPublic(int l) { level=l; }
 
     // Objetivo queries (para UI)
     string getObjectiveDescription() const {

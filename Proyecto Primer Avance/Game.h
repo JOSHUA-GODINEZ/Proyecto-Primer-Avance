@@ -11,9 +11,10 @@ class Jugador {
 public:
     std::string nombre;
     int puntaje;
+    int nivel;
 
-    Jugador() : nombre(""), puntaje(0) {}
-    Jugador(const std::string& n, int p) : nombre(n), puntaje(p) {}
+    Jugador() : nombre(""), puntaje(0), nivel(0) {}
+    Jugador(const std::string& n, int p, int l) : nombre(n), puntaje(p), nivel(l) {}
 
     bool operator==(const Jugador& other) const {
         return nombre == other.nombre;
@@ -151,9 +152,11 @@ private:
         while (nodo) {
             std::string nameEsc = escapeXml(nodo->dato.nombre);
             int score = nodo->dato.puntaje;
+            int level= nodo->dato.nivel;
             f << "  <player>\n";
             f << "    <name>" << nameEsc << "</name>\n";
             f << "    <score>" << score << "</score>\n";
+            f << "    <level>" << level << "</level>\n";
             f << "  </player>\n";
             nodo = nodo->siguiente;
         }
@@ -161,7 +164,7 @@ private:
         f << "</players>\n";
         f.close();
     }
-
+    int level = 0;
     void loadPlayersFromFile() {
         std::ifstream f(playersFilePath);
         if (!f.is_open()) {
@@ -208,15 +211,28 @@ private:
                 catch (...) { score = 0; }
             }
 
+
+   
+            size_t l1 = block.find("<level>");
+            size_t l2 = block.find("</level>");
+            if (l1 != std::string::npos && l2 != std::string::npos && l2 > l1) {
+                std::string sc = block.substr(l1 + 7, l2 - (l1 + 7));
+                try { level = std::stoi(sc); }
+                catch (...) { level = 0; }
+            }
+
+           
+
             if (!name.empty()) {
-                players.agregarFinal(Jugador(name, score));
+                players.agregarFinal(Jugador(name, score,level));
                 playersCount++;
             }
 
             pos = pend + 9; // después de </player>
         }
+        
     }
-
+    int getlevel() { return level; }
 public:
     Game() : board() {
         // Configuración view
@@ -441,6 +457,16 @@ public:
 
         // Cargar players desde archivo (si existe)
         loadPlayersFromFile();
+        if (playersCount > 0) {
+            Nodo<Jugador>* first = players.getCabeza();
+            if (first) {
+                nombre = first->dato.nombre;
+                selectedPlayerIndex = 0;
+                board.setLevelPublic(first->dato.nivel);
+                board.resetBoard();
+            }
+        }
+
     }
 
     ~Game() {
@@ -469,7 +495,7 @@ public:
             // Texto ingresado (TextEntered) mientras se escribe
             if (event.type == sf::Event::TextEntered && isTyping) {
                 if (event.text.unicode >= 32) { // caracteres imprimibles incluido espacio
-                    if (nombre.size() < 40) { // límite de bytes aproximado
+                    if (nombre.size() < 14) { // límite de bytes aproximado
                         sf::Uint32 codepoint = event.text.unicode;
                         if (codepoint < 0x80) {
                             nombre.push_back(static_cast<char>(codepoint));
@@ -503,7 +529,7 @@ public:
                     isTyping = false;
                     if (!nombre.empty()) {
                         if (playersCount < maxPlayers) {
-                            players.agregarFinal(Jugador(nombre, 0)); // empieza con 0
+                            players.agregarFinal(Jugador(nombre,0,1)); // empieza con 0
                             playersCount++;
                             selectedPlayerIndex = static_cast<int>(playersCount) - 1;
                             savePlayersToFile();
@@ -559,7 +585,11 @@ public:
                             // botón azul: seleccionar y pasar a MENU
                             nombre = nodo->dato.nombre;
                             selectedPlayerIndex = static_cast<int>(i);
-                            state = GameState::MENU;
+                            int playerLevel = nodo->dato.nivel;
+                            board.setLevelPublic(playerLevel);
+                            board.resetBoard();
+
+                            state = GameState::MENU; // o GameState::PLAYING si prefieres iniciar ya
                             break;
                         }
 
@@ -579,7 +609,7 @@ public:
                                 else if (selectedPlayerIndex > static_cast<int>(i)) {
                                     selectedPlayerIndex--;
                                 }
-
+                                
                                 // persistir inmediatamente
                                 savePlayersToFile();
                             }
@@ -589,8 +619,10 @@ public:
                     }
                 }
                 else if (state == GameState::MENU) {
+                   
                     if (playButton.getGlobalBounds().contains(world)) {
                         if (!nombre.empty()) {
+                           
                             board.resetBoard();
                             state = GameState::PLAYING;
                         }
@@ -631,33 +663,97 @@ public:
                     }
                 }
                 else if (state == GameState::GAME_OVER) {
+                 //   Nodo<Jugador>* nodo = players.getCabeza();
                     if (retryButton.getGlobalBounds().contains(world)) {
+                      
                         board.resetBoard();
                         state = GameState::PLAYING;
                         return;
                     }
                     if (leaveButton.getGlobalBounds().contains(world)) {
-                        savePlayersToFile();
+                        if (selectedPlayerIndex >= 0 && static_cast<size_t>(selectedPlayerIndex) < playersCount) {
+                            Nodo<Jugador>* nodo = players.getCabeza();
+                            size_t idx = 0;
+                            while (nodo != nullptr && idx < static_cast<size_t>(selectedPlayerIndex)) {
+                                nodo = nodo->siguiente;
+                                ++idx;
+                            }
+                            if (nodo != nullptr) {
+
+                                // sumamos al jugador
+                                int playerLevel = nodo->dato.nivel++;
+                                board.setLevelPublic(playerLevel+1);
+                                board.resetBoard();;
+                                savePlayersToFile(); // guardamos en el XML
+                            }
+                        }
+                       
                         window.close();
                         return;
                     }
                     if (menuButton.getGlobalBounds().contains(world)) {
-                        board.setLevelPublic(1);
+                       // board.setLevelPublic(1);
+
+
+
+                        if (selectedPlayerIndex >= 0 && static_cast<size_t>(selectedPlayerIndex) < playersCount) {
+                            Nodo<Jugador>* nodo = players.getCabeza();
+                            size_t idx = 0;
+                            while (nodo != nullptr && idx < static_cast<size_t>(selectedPlayerIndex)) {
+                                nodo = nodo->siguiente;
+                                ++idx;
+                            }
+                            if (nodo != nullptr) {
+
+                                // sumamos al jugador
+                                int playerLevel = nodo->dato.nivel++;
+                                board.setLevelPublic(playerLevel+1);
+                                board.resetBoard();;
+                                savePlayersToFile(); // guardamos en el XML
+                            }
+                        }
+
+
+
+
+
+
                         board.resetBoard();
                         state = GameState::MENU;
                         hardSelected = false;
                         easyB.setFillColor(sf::Color(100, 255, 100, 255));
                         hardB.setFillColor(sf::Color(200, 200, 200, 255));
                         board.resetMoves(1);
+                        board.setReiniciar();
+
+
+                        
+
                         return;
                     }
                     if (board.getLevel() < 3 && nextLevelButton.getGlobalBounds().contains(world)) {
                         bool objectiveComplete = board.isObjectiveComplete();
                         bool canAdvance = (!hardSelected) || objectiveComplete;
                         if (canAdvance) {
-                            int newLevel = board.getLevel() + 1;
-                            board.setLevelPublic(newLevel);
-                            board.resetBoard();
+                            if (selectedPlayerIndex >= 0 && static_cast<size_t>(selectedPlayerIndex) < playersCount) {
+                                Nodo<Jugador>* nodo = players.getCabeza();
+                                size_t idx = 0;
+                                while (nodo != nullptr && idx < static_cast<size_t>(selectedPlayerIndex)) {
+                                    nodo = nodo->siguiente;
+                                    ++idx;
+                                }
+                                if (nodo != nullptr) {
+
+                                    // sumamos al jugador
+                                    int playerLevel = nodo->dato.nivel++;
+                                    board.setLevelPublic(playerLevel+1);
+                                    board.resetBoard();;
+                                    savePlayersToFile(); // guardamos en el XML
+                                }
+                            }
+                           // int playerLevel = nodo->dato.nivel++;
+                           // board.setLevelPublic(playerLevel);
+                            //board.resetBoard();
                             state = GameState::PLAYING;
                             return;
                         }
@@ -695,7 +791,9 @@ public:
 
                     if (nodo != nullptr) {
                         int partidaScore = board.getAcumulateScore();
-                        nodo->dato.puntaje = partidaScore; // sumamos al jugador
+                        nodo->dato.puntaje = partidaScore;
+                        // sumamos al jugador
+                       
                         savePlayersToFile(); // guardamos en el XML
                     }
                 }
@@ -777,7 +875,7 @@ public:
 
                 // puntos (del jugador)
                 Points.setString(std::to_string(nodo->dato.puntaje));
-                Points.setPosition(375.f, y + 6.f);
+                Points.setPosition(380.f, y + 6.f);
                 window.draw(Points);
 
                 // botón azul (MENU)
