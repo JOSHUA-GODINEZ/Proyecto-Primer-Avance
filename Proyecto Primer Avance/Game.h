@@ -12,9 +12,11 @@ public:
     std::string nombre;
     int puntaje;
     int nivel;
+    int level1, level2, level3, level4, level5;
+    Jugador() : nombre(""), puntaje(0), nivel(0) { level1 = 0; level2 = 0; level3 = 0; level4 = 0; level5 = 0; }
+    Jugador(const std::string& n, int p, int l, int l1, int l2, int l3, int l4, int l5 ) : nombre(n), puntaje(p), nivel(l), level1(l1), level2(l2), level3(l3), level4(l4), level5(l5) {
 
-    Jugador() : nombre(""), puntaje(0), nivel(0) {}
-    Jugador(const std::string& n, int p, int l) : nombre(n), puntaje(p), nivel(l) {}
+    }
 
     bool operator==(const Jugador& other) const {
         return nombre == other.nombre;
@@ -42,7 +44,7 @@ private:
     sf::Sprite menuSprite;
     sf::Texture userTexture;
     sf::Sprite userSprite;
-    int nivel;
+    int nivel, nivel1, nivel2, nivel3, nivel4, nivel5;
     bool paso;
 
     //Progreso
@@ -162,10 +164,20 @@ private:
             std::string nameEsc = escapeXml(nodo->dato.nombre);
             int score = nodo->dato.puntaje;
             int level= nodo->dato.nivel;
+            int level1 = nodo->dato.level1;
+            int level2= nodo->dato.level2;
+            int level3 = nodo->dato.level3;
+            int level4 = nodo->dato.level4;
+            int level5 = nodo->dato.level5;
             f << "  <player>\n";
             f << "    <name>" << nameEsc << "</name>\n";
             f << "    <score>" << score << "</score>\n";
             f << "    <level>" << level << "</level>\n";
+            f << "    <level1>" << level1 << "</level1>\n";
+            f << "    <level2>" << level2 << "</level2>\n";
+            f << "    <level3>" << level3 << "</level3>\n";
+            f << "    <level4>" << level4 << "</level4>\n";
+            f << "    <level5>" << level5 << "</level5>\n";
             f << "  </player>\n";
             nodo = nodo->siguiente;
         }
@@ -230,10 +242,51 @@ private:
                 catch (...) { level = 0; }
             }
 
-           
+            int level1 = 0, level2 = 0, level3 = 0, level4 = 0, level5 = 0;
+
+            size_t l3 = block.find("<level1>");
+            size_t l4 = block.find("</level1>");
+            if (l3 != std::string::npos && l4 != std::string::npos && l4 > l3) {
+                std::string sc = block.substr(l3 + 8, l4 - (l3 + 8));
+                try { level1 = std::stoi(sc); }
+                catch (...) { level1 = 0; }
+            }
+
+            size_t l5 = block.find("<level2>");
+            size_t l6 = block.find("</level2>");
+            if (l5 != std::string::npos && l6 != std::string::npos && l6 > l5) {
+                std::string sc = block.substr(l5 + 8, l6 - (l5 + 8));
+                try { level2 = std::stoi(sc); }
+                catch (...) { level2 = 0; }
+            }
+
+            size_t l7 = block.find("<level3>");
+            size_t l8 = block.find("</level3>");
+            if (l7 != std::string::npos && l8 != std::string::npos && l8 > l7) {
+                std::string sc = block.substr(l7 + 8, l8 - (l7 + 8));
+                try { level3 = std::stoi(sc); }
+                catch (...) { level3 = 0; }
+            }
+
+            size_t l9 = block.find("<level4>");
+            size_t l10 = block.find("</level4>");
+            if (l9 != std::string::npos && l10 != std::string::npos && l10 > l9) {
+                std::string sc = block.substr(l9 + 8, l10 - (l9 + 8));
+                try { level4 = std::stoi(sc); }
+                catch (...) { level4 = 0; }
+            }
+
+            size_t l11 = block.find("<level5>");
+            size_t l12 = block.find("</level5>");
+            if (l11 != std::string::npos && l12 != std::string::npos && l12 > l11) {
+                std::string sc = block.substr(l11 + 8, l12 - (l11 + 8));
+                try { level5 = std::stoi(sc); }
+                catch (...) { level5 = 0; }
+            }
+
 
             if (!name.empty()) {
-                players.agregarFinal(Jugador(name, score,level));
+                players.agregarFinal(Jugador(name, score,level,level1, level2, level3, level4, level5 ));
                 playersCount++;
             }
 
@@ -667,7 +720,7 @@ public:
                     isTyping = false;
                     if (!nombre.empty()) {
                         if (playersCount < maxPlayers) {
-                            players.agregarFinal(Jugador(nombre,0,1)); // empieza con 0
+                            players.agregarFinal(Jugador(nombre,0,1,0,0,0,0,0)); // empieza con 0
                             playersCount++;
                             selectedPlayerIndex = static_cast<int>(playersCount) - 1;
                             savePlayersToFile();
@@ -871,6 +924,7 @@ public:
                                 nodo->dato.nivel--;
                                 board.setLevelPublic(1);
                                 board.resetBoard();
+                              
                                 savePlayersToFile(); // guardamos en el XML
                             }
                         }
@@ -924,7 +978,7 @@ public:
                                 ++idx;
                             }
                             if (nodo != nullptr) {
-
+                                
                                 // sumamos al jugador
                                 nodo->dato.nivel--;
                                 board.setLevelPublic(4);
@@ -992,7 +1046,12 @@ public:
                                 // sumamos al jugador
                                 int playerLevel = nodo->dato.nivel++;
                                 board.setLevelPublic(playerLevel+1);
-                                board.resetBoard();;
+                                board.resetBoard();
+                                nodo->dato.level1 = board.getscore1();
+                                nodo->dato.level2 = board.getscore2();
+                                nodo->dato.level3 = board.getscore3();
+                                nodo->dato.level4 = board.getscore4();
+                                nodo->dato.level5 = board.getscore5();
                                 savePlayersToFile(); // guardamos en el XML
                             }
                         }
@@ -1020,6 +1079,11 @@ public:
                                 int playerLevel = nodo->dato.nivel++;
                                 board.setLevelPublic(playerLevel+1);
                                 board.resetBoard();;
+                                nodo->dato.level1 = board.getscore1();
+                                nodo->dato.level2 = board.getscore2();
+                                nodo->dato.level3 = board.getscore3();
+                                nodo->dato.level4 = board.getscore4();
+                                nodo->dato.level5 = board.getscore5();
                                 savePlayersToFile(); // guardamos en el XML
                             }
                         }
@@ -1058,7 +1122,12 @@ public:
                                     // sumamos al jugador
                                     int playerLevel = nodo->dato.nivel++;
                                     board.setLevelPublic(playerLevel+1);
-                                    board.resetBoard();;
+                                    board.resetBoard();
+                                    nodo->dato.level1 = board.getscore1();
+                                    nodo->dato.level2 = board.getscore2();
+                                    nodo->dato.level3 = board.getscore3();
+                                    nodo->dato.level4 = board.getscore4();
+                                    nodo->dato.level5 = board.getscore5();
                                     savePlayersToFile(); // guardamos en el XML
                                 }
                             }
@@ -1202,7 +1271,7 @@ public:
                 btnText.setCharacterSize(14);
                 btnText.setFillColor(sf::Color::Black);
                 btnText.setString("MENU");
-                float bx = btn1X + (buttonW - btnText.getLocalBounds().width) / 2.f - 4.f;
+                float bx = btn1X+5 + (buttonW - btnText.getLocalBounds().width) / 2.f - 4.f;
                 float by = y + (buttonH - btnText.getCharacterSize()) / 2.f - 2.f;
                 btnText.setPosition(bx, by);
                 window.draw(btnText);
@@ -1220,7 +1289,7 @@ public:
                 btnText2.setCharacterSize(12);
                 btnText2.setFillColor(sf::Color::Black);
                 btnText2.setString("Eliminar");
-                float bx2 = btn2X + (buttonW - btnText2.getLocalBounds().width) / 2.f - 4.f;
+                float bx2 = btn2X+5 + (buttonW - btnText2.getLocalBounds().width) / 2.f - 4.f;
                 float by2 = y + (buttonH - btnText2.getCharacterSize()) / 2.f - 2.f;
                 btnText2.setPosition(bx2, by2);
                 window.draw(btnText2);
@@ -1295,6 +1364,11 @@ public:
                     // sumamos al jugador
                      playerscore = nodo->dato.puntaje;
                      nivel= nodo->dato.nivel;
+                     nivel1 = nodo->dato.level1;
+                     nivel2 = nodo->dato.level2;
+                     nivel3 = nodo->dato.level3;
+                     nivel4 = nodo->dato.level4;
+                     nivel5 = nodo->dato.level5;
                  //   board.setLevelPublic(playerLevel + 1);
                   // guardamos en el XML
                 }
@@ -1318,7 +1392,7 @@ public:
                 level3.setString("Nivel 3: Bloqueado   ");
                 level4.setString("Nivel 4: Bloqueado   ");
                 level5.setString("Nivel 5: Bloqueado   ");
-                level1.setString("Nivel 1: Completado   " + std::to_string(board.getscore1()));
+                level1.setString("Nivel 1: Completado   " + std::to_string(nivel1));
                 blev1.setPosition(470, 155);
                 window.draw(blev1);
                 window.draw(blev1T);
@@ -1328,8 +1402,8 @@ public:
                 level3.setString("Nivel 3: Bloqueado   ");
                 level4.setString("Nivel 4: Bloqueado   ");
                 level5.setString("Nivel 5: Bloqueado   ");
-                level1.setString("Nivel 1: Desbloqueado   " + std::to_string(board.getscore1()));
-                level2.setString("Nivel 2: Desbloqueado   " + std::to_string(board.getscore2()));
+                level1.setString("Nivel 1: Desbloqueado   " + std::to_string(nivel1));
+                level2.setString("Nivel 2: Desbloqueado   " + std::to_string(nivel2));
                 blev2.setPosition(470, 205);
                 window.draw(blev2);
                 window.draw(blev2T);
@@ -1338,9 +1412,9 @@ public:
             if (nivel > 3) {
                 level4.setString("Nivel 4: Bloqueado   ");
                 level5.setString("Nivel 5: Bloqueado   ");
-                level1.setString("Nivel 1: Desbloqueado   " + std::to_string(board.getscore1()));
-                level2.setString("Nivel 2: Desbloqueado   " + std::to_string(board.getscore2()));
-                level3.setString("Nivel 3: Desbloqueado   " + std::to_string(board.getscore3()));
+                level1.setString("Nivel 1: Desbloqueado   " + std::to_string(nivel1));
+                level2.setString("Nivel 2: Desbloqueado   " + std::to_string(nivel2));
+                level3.setString("Nivel 3: Desbloqueado   " + std::to_string(nivel3));
                 blev3.setPosition(470, 255);
                 window.draw(blev3);
                 window.draw(blev3T);
@@ -1350,20 +1424,20 @@ public:
                 
             if (nivel > 4) {
                 level5.setString("Nivel 5: Bloqueado   ");
-                level1.setString("Nivel 1: Desbloqueado   " + std::to_string(board.getscore1()));
-                level2.setString("Nivel 2: Desbloqueado   " + std::to_string(board.getscore2()));
-                level3.setString("Nivel 3: Desbloqueado   " + std::to_string(board.getscore3()));
-                level4.setString("Nivel 4: Desbloqueado   " + std::to_string(board.getscore4()));
+                level1.setString("Nivel 1: Desbloqueado   " + std::to_string(nivel1));
+                level2.setString("Nivel 2: Desbloqueado   " + std::to_string(nivel2));
+                level3.setString("Nivel 3: Desbloqueado   " + std::to_string(nivel3));
+                level4.setString("Nivel 4: Desbloqueado   " + std::to_string(nivel4));
                 blev4.setPosition(470, 305);
                 window.draw(blev4);
                 window.draw(blev4T);
             }
             if (nivel > 5) {
-                level5.setString("Nivel 5: Desbloqueado   " + std::to_string(board.getscore5()));
-                level1.setString("Nivel 1: Desbloqueado   " + std::to_string(board.getscore1()));
-                level2.setString("Nivel 2: Desbloqueado   " + std::to_string(board.getscore2()));
-                level3.setString("Nivel 3: Desbloqueado   " + std::to_string(board.getscore3()));
-                level4.setString("Nivel 4: Desbloqueado   " + std::to_string(board.getscore4()));
+                level5.setString("Nivel 5: Desbloqueado   " + std::to_string(nivel5));
+                level1.setString("Nivel 1: Desbloqueado   " + std::to_string(nivel1));
+                level2.setString("Nivel 2: Desbloqueado   " + std::to_string(nivel2));
+                level3.setString("Nivel 3: Desbloqueado   " + std::to_string(nivel3));
+                level4.setString("Nivel 4: Desbloqueado   " + std::to_string(nivel4));
                 blev5.setPosition(470, 355);
                 window.draw(blev5);
                 window.draw(blev5T);
