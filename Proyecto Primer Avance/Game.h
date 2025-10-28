@@ -42,6 +42,14 @@ private:
     sf::Sprite menuSprite;
     sf::Texture userTexture;
     sf::Sprite userSprite;
+    int nivel;
+
+    //Progreso
+    sf::Text level1,level2,level3,level4,level5;
+    sf::RectangleShape blev1, blev2, blev3, blev4, blev5,reset;
+
+
+
 
     // Timing
     sf::Clock cleaningClock;
@@ -85,7 +93,7 @@ private:
 
     bool hardSelected = false;
 
-    enum class GameState { USERS, MENU, PLAYING, GAME_OVER };
+    enum class GameState { USERS, MENU,PROGRESS, PLAYING, GAME_OVER };
     GameState state = GameState::USERS;
 
     // Archivo XML donde se guardan jugadores
@@ -282,6 +290,78 @@ public:
         text.setCharacterSize(24);
         text.setFillColor(sf::Color::Black);
         text.setPosition(userButton.getPosition().x + 8.f, userButton.getPosition().y + 6.f);
+        //Progreso
+
+ 
+        level1.setFont(font);
+        level1.setCharacterSize(20);
+        level1.setFillColor(sf::Color::Black);
+
+        level1.setPosition(200.f, 200.f);
+       
+       
+        level2.setFont(font);
+        level2.setCharacterSize(20);
+        level2.setFillColor(sf::Color::Black);
+
+        level2.setPosition(200.f, 250.f);
+
+       
+        level3.setFont(font);
+        level3.setCharacterSize(20);
+        level3.setFillColor(sf::Color::Black);
+       
+        level3.setPosition(200.f, 300.f);
+
+  
+        level4.setFont(font);
+        level4.setCharacterSize(20);
+        level4.setFillColor(sf::Color::Black);
+ 
+        level4.setPosition(200.f, 350.f);
+
+
+        level5.setFont(font);
+        level5.setCharacterSize(20);
+        level5.setFillColor(sf::Color::Black);
+
+        level5.setPosition(200.f, 400.f);
+
+
+     
+        
+        blev1.setSize(sf::Vector2f(30.f, 30.f));
+        blev1.setFillColor(sf::Color(100, 200, 255));
+        blev1.setOutlineThickness(2.f);
+        blev1.setOutlineColor(sf::Color::Black);
+
+
+        blev2.setSize(sf::Vector2f(30.f, 30.f));
+        blev2.setFillColor(sf::Color(100, 200, 255));
+        blev2.setOutlineThickness(2.f);
+        blev2.setOutlineColor(sf::Color::Black);
+       
+
+        blev3.setSize(sf::Vector2f(30.f, 30.f));
+        blev3.setFillColor(sf::Color(100, 200, 255));
+        blev3.setOutlineThickness(2.f);
+        blev3.setOutlineColor(sf::Color::Black);
+     
+
+        blev4.setSize(sf::Vector2f(30.f, 30.f));
+        blev4.setFillColor(sf::Color(100, 200, 255));
+        blev4.setOutlineThickness(2.f);
+        blev4.setOutlineColor(sf::Color::Black);
+       
+
+        blev5.setSize(sf::Vector2f(30.f, 30.f));
+        blev5.setFillColor(sf::Color(100, 200, 255));
+        blev5.setOutlineThickness(2.f);
+        blev5.setOutlineColor(sf::Color::Black);
+    
+
+
+
 
         // Labels de la lista
         nombreU.setFont(font);
@@ -627,7 +707,13 @@ public:
                             state = GameState::PLAYING;
                         }
                     }
+                    if (progress.getGlobalBounds().contains(world)) {
+                        state = GameState::PROGRESS;
 
+                           
+                          
+                        
+                    }
                     if (playersBox.getGlobalBounds().contains(world)) {
                         state = GameState::USERS;
                     }
@@ -662,6 +748,124 @@ public:
                         }
                     }
                 }
+                else if (state == GameState::PROGRESS) {
+                
+                    if (blev1.getGlobalBounds().contains(world)) {
+                        state = GameState::PLAYING;
+
+                        if (selectedPlayerIndex >= 0 && static_cast<size_t>(selectedPlayerIndex) < playersCount) {
+                            Nodo<Jugador>* nodo = players.getCabeza();
+                            size_t idx = 0;
+                            while (nodo != nullptr && idx < static_cast<size_t>(selectedPlayerIndex)) {
+                                nodo = nodo->siguiente;
+                                ++idx;
+                            }
+                            if (nodo != nullptr) {
+
+                                // sumamos al jugador
+                                nodo->dato.nivel--;
+                                board.setLevelPublic(1);
+                                board.resetBoard();
+                                savePlayersToFile(); // guardamos en el XML
+                            }
+                        }
+                    }
+                    if (blev2.getGlobalBounds().contains(world)) {
+                        state = GameState::PLAYING;
+
+                        if (selectedPlayerIndex >= 0 && static_cast<size_t>(selectedPlayerIndex) < playersCount) {
+                            Nodo<Jugador>* nodo = players.getCabeza();
+                            size_t idx = 0;
+                            while (nodo != nullptr && idx < static_cast<size_t>(selectedPlayerIndex)) {
+                                nodo = nodo->siguiente;
+                                ++idx;
+                            }
+                            if (nodo != nullptr) {
+
+                                // sumamos al jugador
+                                nodo->dato.nivel--;
+                                board.setLevelPublic(2);
+                                board.resetBoard();
+                                savePlayersToFile(); // guardamos en el XML
+                            }
+                        }
+                    } if (blev3.getGlobalBounds().contains(world)) {
+                        state = GameState::PLAYING;
+
+                        if (selectedPlayerIndex >= 0 && static_cast<size_t>(selectedPlayerIndex) < playersCount) {
+                            Nodo<Jugador>* nodo = players.getCabeza();
+                            size_t idx = 0;
+                            while (nodo != nullptr && idx < static_cast<size_t>(selectedPlayerIndex)) {
+                                nodo = nodo->siguiente;
+                                ++idx;
+                            }
+                            if (nodo != nullptr) {
+
+                                // sumamos al jugador
+                                nodo->dato.nivel--;
+                                board.setLevelPublic(3);
+                                board.resetBoard();
+                                savePlayersToFile(); // guardamos en el XML
+                            }
+                        }
+                    } if (blev4.getGlobalBounds().contains(world)) {
+                        state = GameState::PLAYING;
+
+                        if (selectedPlayerIndex >= 0 && static_cast<size_t>(selectedPlayerIndex) < playersCount) {
+                            Nodo<Jugador>* nodo = players.getCabeza();
+                            size_t idx = 0;
+                            while (nodo != nullptr && idx < static_cast<size_t>(selectedPlayerIndex)) {
+                                nodo = nodo->siguiente;
+                                ++idx;
+                            }
+                            if (nodo != nullptr) {
+
+                                // sumamos al jugador
+                                nodo->dato.nivel--;
+                                board.setLevelPublic(4);
+                                board.resetBoard();
+                                savePlayersToFile(); // guardamos en el XML
+                            }
+                        }
+
+                    } if (blev5.getGlobalBounds().contains(world)) {
+                        state = GameState::PLAYING;
+
+                        if (selectedPlayerIndex >= 0 && static_cast<size_t>(selectedPlayerIndex) < playersCount) {
+                            Nodo<Jugador>* nodo = players.getCabeza();
+                            size_t idx = 0;
+                            while (nodo != nullptr && idx < static_cast<size_t>(selectedPlayerIndex)) {
+                                nodo = nodo->siguiente;
+                                ++idx;
+                            }
+                            if (nodo != nullptr) {
+
+                                // sumamos al jugador
+                                nodo->dato.nivel--;
+                                board.setLevelPublic(5);
+                                board.resetBoard();
+                                savePlayersToFile(); // guardamos en el XML
+                            }
+                        }
+                    }
+                
+                
+                
+                
+                
+                
+                
+                
+                
+                
+                
+                
+                
+                
+                
+                
+                
+                }
                 else if (state == GameState::GAME_OVER) {
                  //   Nodo<Jugador>* nodo = players.getCabeza();
                     if (retryButton.getGlobalBounds().contains(world)) {
@@ -679,7 +883,7 @@ public:
                                 ++idx;
                             }
                             if (nodo != nullptr) {
-
+                                
                                 // sumamos al jugador
                                 int playerLevel = nodo->dato.nivel++;
                                 board.setLevelPublic(playerLevel+1);
@@ -704,7 +908,9 @@ public:
                                 ++idx;
                             }
                             if (nodo != nullptr) {
-
+                                if (hardSelected == true) {
+                                    nodo->dato.nivel--;
+                                }
                                 // sumamos al jugador
                                 int playerLevel = nodo->dato.nivel++;
                                 board.setLevelPublic(playerLevel+1);
@@ -913,6 +1119,26 @@ public:
                 float by2 = y + (buttonH - btnText2.getCharacterSize()) / 2.f - 2.f;
                 btnText2.setPosition(bx2, by2);
                 window.draw(btnText2);
+
+
+                sf::RectangleShape btn3(sf::Vector2f(buttonW, buttonH));
+                btn3.setPosition(btn2X+55, y);
+                btn3.setFillColor(sf::Color(200, 100, 50));
+                btn3.setOutlineThickness(2.f);
+                btn3.setOutlineColor(sf::Color::Black);
+                window.draw(btn3);
+
+                sf::Text btnText3;
+                btnText3.setFont(font);
+                btnText3.setCharacterSize(12);
+                btnText3.setFillColor(sf::Color::Black);
+                btnText3.setString("Reiniciar");
+                float bx3 = btn2X+60 + (buttonW - btnText3.getLocalBounds().width) / 2.f - 4.f;
+                float by3 = y + (buttonH - btnText3.getCharacterSize()) / 2.f - 2.f;
+                btnText3.setPosition(bx3, by3);
+                window.draw(btnText3);
+
+
             }
         }
         else if (state == GameState::MENU) {
@@ -941,6 +1167,107 @@ public:
                 window.draw(current);
             }
         }
+        else if (state == GameState::PROGRESS) {
+            if (menuTexture.getSize().x != 0 && menuTexture.getSize().y != 0) window.draw(menuSprite);
+
+            sf::RectangleShape overlay(sf::Vector2f(800.f, 600.f));
+            overlay.setFillColor(sf::Color(255, 255, 255, 200));
+            overlay.setPosition(0.f, 0.f);
+            window.draw(overlay);
+            int playerscore=0;
+           // int level = 0;
+            if (userTexture.getSize().x != 0 && userTexture.getSize().y != 0) window.draw(userSprite);
+            string comp;
+            if (selectedPlayerIndex >= 0 && static_cast<size_t>(selectedPlayerIndex) < playersCount) {
+                Nodo<Jugador>* nodo = players.getCabeza();
+                size_t idx = 0;
+                while (nodo != nullptr && idx < static_cast<size_t>(selectedPlayerIndex)) {
+                    nodo = nodo->siguiente;
+                    ++idx;
+                }
+                if (nodo != nullptr) {
+
+                    // sumamos al jugador
+                     playerscore = nodo->dato.puntaje;
+                     nivel= nodo->dato.nivel;
+                 //   board.setLevelPublic(playerLevel + 1);
+                  // guardamos en el XML
+                }
+            }
+         /*   int nivel1;
+            int c = 0;
+            if (c == 0) {
+                 nivel1 = nivel;
+            }
+            c++;*/
+            if (nivel>0) {
+                level1.setString("Nivel 1: Bloqueado   " + std::to_string(playerscore));
+                level2.setString("Nivel 2: Bloqueado   " + std::to_string(playerscore));
+                level3.setString("Nivel 3: Bloqueado   " + std::to_string(playerscore));
+                level4.setString("Nivel 4: Bloqueado   " + std::to_string(playerscore));
+                level5.setString("Nivel 5: Bloqueado   " + std::to_string(playerscore));
+            }
+           if(nivel > 1) {
+                level2.setString("Nivel 2: Bloqueado   " + std::to_string(playerscore));
+                level3.setString("Nivel 3: Bloqueado   " + std::to_string(playerscore));
+                level4.setString("Nivel 4: Bloqueado   " + std::to_string(playerscore));
+                level5.setString("Nivel 5: Bloqueado   " + std::to_string(playerscore));
+                level1.setString("Nivel 1: Completado   " + std::to_string(playerscore));
+                blev1.setPosition(500, 200);
+                window.draw(blev1);
+               
+            }
+          if (nivel > 2) {
+                level3.setString("Nivel 3: Bloqueado   " + std::to_string(playerscore));
+                level4.setString("Nivel 4: Bloqueado   " + std::to_string(playerscore));
+                level5.setString("Nivel 5: Bloqueado   " + std::to_string(playerscore));
+                level1.setString("Nivel 1: Desbloqueado   " + std::to_string(playerscore));
+                level2.setString("Nivel 2: Desbloqueado   " + std::to_string(playerscore));
+                blev2.setPosition(500, 250);
+                window.draw(blev2);
+           }
+          
+            if (nivel > 3) {
+                level4.setString("Nivel 4: Bloqueado   " + std::to_string(playerscore));
+                level5.setString("Nivel 5: Bloqueado   " + std::to_string(playerscore));
+                level1.setString("Nivel 1: Desbloqueado   " + std::to_string(playerscore));
+                level2.setString("Nivel 2: Desbloqueado   " + std::to_string(playerscore));
+                level3.setString("Nivel 3: Desbloqueado   " + std::to_string(playerscore));
+                blev3.setPosition(500, 300);
+                window.draw(blev3);
+            }
+       
+           
+                
+            if (nivel > 4) {
+                level5.setString("Nivel 5: Bloqueado   " + std::to_string(playerscore));
+                level1.setString("Nivel 1: Desbloqueado   " + std::to_string(playerscore));
+                level2.setString("Nivel 2: Desbloqueado   " + std::to_string(playerscore));
+                level3.setString("Nivel 3: Desbloqueado   " + std::to_string(playerscore));
+                level4.setString("Nivel 4: Desbloqueado   " + std::to_string(playerscore));
+                blev4.setPosition(500, 350);
+                window.draw(blev4);
+            }
+            if (nivel > 5) {
+                level5.setString("Nivel 5: Desbloqueado   " + std::to_string(playerscore));
+                level1.setString("Nivel 1: Desbloqueado   " + std::to_string(playerscore));
+                level2.setString("Nivel 2: Desbloqueado   " + std::to_string(playerscore));
+                level3.setString("Nivel 3: Desbloqueado   " + std::to_string(playerscore));
+                level4.setString("Nivel 4: Desbloqueado   " + std::to_string(playerscore));
+                blev5.setPosition(500, 400);
+                window.draw(blev5);
+            }
+
+
+            window.draw(level1);
+            window.draw(level2);
+            window.draw(level3);
+            window.draw(level4);
+            window.draw(level5);
+       
+            //window.draw(btn1);
+        
+        }
         else if (state == GameState::PLAYING) {
             if (menuTexture.getSize().x != 0 && menuTexture.getSize().y != 0) window.draw(menuSprite);
             if (backgroundTexture.getSize().x != 0 && backgroundTexture.getSize().y != 0) window.draw(backgroundSprite);
@@ -968,6 +1295,7 @@ public:
 
             window.draw(objTitle);
             window.draw(objProgress);
+      
         }
         else if (state == GameState::GAME_OVER) {
             if (menuTexture.getSize().x != 0 && menuTexture.getSize().y != 0) window.draw(menuSprite);
