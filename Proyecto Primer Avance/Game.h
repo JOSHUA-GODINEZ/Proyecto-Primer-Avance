@@ -43,11 +43,12 @@ private:
     sf::Texture userTexture;
     sf::Sprite userSprite;
     int nivel;
+    bool paso;
 
     //Progreso
-    sf::Text level1,level2,level3,level4,level5;
-    sf::RectangleShape blev1, blev2, blev3, blev4, blev5,reset;
-
+    sf::Text level1,level2,level3,level4,level5,total;
+    sf::RectangleShape blev1, blev2, blev3, blev4, blev5;
+    sf::Text  blev1T, blev2T, blev3T, blev4T, blev5T;
 
 
 
@@ -88,8 +89,8 @@ private:
     sf::Text nextLevelText;
 
     // Menu button on Game Over
-    sf::RectangleShape menuButton;
-    sf::Text menuButtonText;
+    sf::RectangleShape menuButton, menuButton1, menuButton2;
+    sf::Text menuButtonText, menuButtonText1, menuButtonText2;
 
     bool hardSelected = false;
 
@@ -297,69 +298,97 @@ public:
         level1.setCharacterSize(20);
         level1.setFillColor(sf::Color::Black);
 
-        level1.setPosition(200.f, 200.f);
+        level1.setPosition(200.f, 150.f);
        
        
         level2.setFont(font);
         level2.setCharacterSize(20);
         level2.setFillColor(sf::Color::Black);
 
-        level2.setPosition(200.f, 250.f);
+        level2.setPosition(200.f, 200.f);
 
        
         level3.setFont(font);
         level3.setCharacterSize(20);
         level3.setFillColor(sf::Color::Black);
        
-        level3.setPosition(200.f, 300.f);
+        level3.setPosition(200.f, 250.f);
 
   
         level4.setFont(font);
         level4.setCharacterSize(20);
         level4.setFillColor(sf::Color::Black);
  
-        level4.setPosition(200.f, 350.f);
+        level4.setPosition(200.f, 300.f);
 
 
         level5.setFont(font);
         level5.setCharacterSize(20);
         level5.setFillColor(sf::Color::Black);
 
-        level5.setPosition(200.f, 400.f);
+        level5.setPosition(200.f, 350.f);
 
+        total.setFont(font);
+        total.setCharacterSize(20);
+        total.setFillColor(sf::Color::Black);
 
+        total.setPosition(200.f, 400.f);
      
         
-        blev1.setSize(sf::Vector2f(30.f, 30.f));
+        blev1.setSize(sf::Vector2f(50.f, 20.f));
         blev1.setFillColor(sf::Color(100, 200, 255));
         blev1.setOutlineThickness(2.f);
         blev1.setOutlineColor(sf::Color::Black);
 
+        blev1T.setFont(font);
+        blev1T.setCharacterSize(15);
+        blev1T.setFillColor(sf::Color::Black);
+        blev1T.setString("Jugar");
+        blev1T.setPosition(475.f,155.f);
 
-        blev2.setSize(sf::Vector2f(30.f, 30.f));
+        blev2.setSize(sf::Vector2f(50.f, 20.f));
         blev2.setFillColor(sf::Color(100, 200, 255));
         blev2.setOutlineThickness(2.f);
         blev2.setOutlineColor(sf::Color::Black);
        
+        blev2T.setFont(font);
+        blev2T.setCharacterSize(15);
+        blev2T.setFillColor(sf::Color::Black);
+        blev2T.setString("Jugar");
+        blev2T.setPosition(475.f, 205.f);
 
-        blev3.setSize(sf::Vector2f(30.f, 30.f));
+        blev3.setSize(sf::Vector2f(50.f, 20.f));
         blev3.setFillColor(sf::Color(100, 200, 255));
         blev3.setOutlineThickness(2.f);
         blev3.setOutlineColor(sf::Color::Black);
      
+        blev3T.setFont(font);
+        blev3T.setCharacterSize(15);
+        blev3T.setFillColor(sf::Color::Black);
+        blev3T.setString("Jugar");
+        blev3T.setPosition(475.f, 255.f);
 
-        blev4.setSize(sf::Vector2f(30.f, 30.f));
+        blev4.setSize(sf::Vector2f(50.f, 20.f));
         blev4.setFillColor(sf::Color(100, 200, 255));
         blev4.setOutlineThickness(2.f);
         blev4.setOutlineColor(sf::Color::Black);
        
+        blev4T.setFont(font);
+        blev4T.setCharacterSize(15);
+        blev4T.setFillColor(sf::Color::Black);
+        blev4T.setString("Jugar");
+        blev4T.setPosition(475.f, 305.f);
 
-        blev5.setSize(sf::Vector2f(30.f, 30.f));
+        blev5.setSize(sf::Vector2f(50.f, 20.f));
         blev5.setFillColor(sf::Color(100, 200, 255));
         blev5.setOutlineThickness(2.f);
         blev5.setOutlineColor(sf::Color::Black);
     
-
+        blev5T.setFont(font);
+        blev5T.setCharacterSize(15);
+        blev5T.setFillColor(sf::Color::Black);
+        blev5T.setString("Jugar");
+        blev5T.setPosition(475.f, 355.f);
 
 
 
@@ -527,6 +556,35 @@ public:
         menuButtonText.setFillColor(sf::Color::Black);
         menuButtonText.setPosition(menuButton.getPosition().x - 95.f, menuButton.getPosition().y - 12.f);
 
+
+        menuButton1.setSize(sf::Vector2f(180.f, 25.f));
+        menuButton1.setOrigin(menuButton1.getSize() / 2.f);
+        menuButton1.setPosition(100.f, 80.f);
+        menuButton1.setFillColor(sf::Color(200, 200, 255));
+        menuButton1.setOutlineThickness(3.f);
+        menuButton1.setOutlineColor(sf::Color::Black);
+
+        menuButtonText1.setFont(font);
+        menuButtonText1.setCharacterSize(18);
+        menuButtonText1.setString("MENU PRINCIPAL");
+        menuButtonText1.setFillColor(sf::Color::Black);
+        menuButtonText1.setPosition(menuButton1.getPosition().x - 95.f, menuButton1.getPosition().y - 12.f);
+
+
+        menuButton2.setSize(sf::Vector2f(200.f, 60.f));
+        menuButton2.setOrigin(menuButton2.getSize() / 2.f);
+        menuButton2.setPosition(390.f,490.f);
+        menuButton2.setFillColor(sf::Color(200, 200, 255));
+        menuButton2.setOutlineThickness(3.f);
+        menuButton2.setOutlineColor(sf::Color::Black);
+
+        menuButtonText2.setFont(font);
+        menuButtonText2.setCharacterSize(22);
+        menuButtonText2.setString("MENU PRINCIPAL");
+        menuButtonText2.setFillColor(sf::Color::Black);
+        menuButtonText2.setPosition(menuButton2.getPosition().x - 95.f, menuButton2.getPosition().y - 12.f);
+
+
         // Default difficulty
         hardSelected = false;
         easyB.setFillColor(sf::Color(100, 255, 100, 255));
@@ -652,7 +710,7 @@ public:
                         sf::FloatRect nameRect(playersX, y, playerW, playerH);
                         sf::FloatRect btnRect(btn1X, y, buttonW, buttonH);
                         sf::FloatRect btnRect2(btn2X, y, buttonW, buttonH);
-
+                        sf::FloatRect btn3(btn2X+55, y, buttonW, buttonH);
                         //if (nameRect.contains(world)) {
                         //    // seleccionar nombre (solo visual)
                         //    nombre = nodo->dato.nombre;
@@ -660,6 +718,25 @@ public:
                         //    selectedPlayerIndex = static_cast<int>(i);
                         //    break;
                         //}
+                        if (btn3.contains(world)) {
+                            if (selectedPlayerIndex >= 0 && static_cast<size_t>(selectedPlayerIndex) < playersCount) {
+                                Nodo<Jugador>* nodo = players.getCabeza();
+                                size_t idx = 0;
+                                while (nodo != nullptr && idx < static_cast<size_t>(selectedPlayerIndex)) {
+                                    nodo = nodo->siguiente;
+                                    ++idx;
+                                }
+                                if (nodo != nullptr) {
+                                  
+                                    // sumamos al jugador
+                                    nodo->dato.nivel = 1;
+                                    nodo->dato.puntaje = 0;
+                                
+                                    savePlayersToFile(); // guardamos en el XML
+                                }
+                            }
+                        
+                        }
 
                         if (btnRect.contains(world)) {
                             // botón azul: seleccionar y pasar a MENU
@@ -702,7 +779,7 @@ public:
                    
                     if (playButton.getGlobalBounds().contains(world)) {
                         if (!nombre.empty()) {
-                           
+                            paso = false;
                             board.resetBoard();
                             state = GameState::PLAYING;
                         }
@@ -747,12 +824,40 @@ public:
                             board.selectOrSwap(row, col);
                         }
                     }
+                    if (menuButton1.getGlobalBounds().contains(world)) {
+                        state = GameState::MENU;
+
+                        if (paso==true) {
+
+                            if (selectedPlayerIndex >= 0 && static_cast<size_t>(selectedPlayerIndex) < playersCount) {
+                                Nodo<Jugador>* nodo = players.getCabeza();
+                                size_t idx = 0;
+                                while (nodo != nullptr && idx < static_cast<size_t>(selectedPlayerIndex)) {
+                                    nodo = nodo->siguiente;
+                                    ++idx;
+                                }
+                                if (nodo != nullptr) {
+                                    if (hardSelected == true) {
+                                        nodo->dato.nivel--;
+                                    }
+                                    // sumamos al jugador
+                                    int playerLevel = nodo->dato.nivel++;
+                                    board.setLevelPublic(playerLevel + 1);
+                                    board.resetBoard();;
+                                    savePlayersToFile(); // guardamos en el XML
+                                }
+                            }
+
+                        }
+                    }
                 }
                 else if (state == GameState::PROGRESS) {
-                
+                    if (menuButton2.getGlobalBounds().contains(world)) {
+                        state = GameState::MENU;
+                    }
                     if (blev1.getGlobalBounds().contains(world)) {
                         state = GameState::PLAYING;
-
+                        paso = true;
                         if (selectedPlayerIndex >= 0 && static_cast<size_t>(selectedPlayerIndex) < playersCount) {
                             Nodo<Jugador>* nodo = players.getCabeza();
                             size_t idx = 0;
@@ -772,7 +877,7 @@ public:
                     }
                     if (blev2.getGlobalBounds().contains(world)) {
                         state = GameState::PLAYING;
-
+                        paso = true;
                         if (selectedPlayerIndex >= 0 && static_cast<size_t>(selectedPlayerIndex) < playersCount) {
                             Nodo<Jugador>* nodo = players.getCabeza();
                             size_t idx = 0;
@@ -791,7 +896,7 @@ public:
                         }
                     } if (blev3.getGlobalBounds().contains(world)) {
                         state = GameState::PLAYING;
-
+                        paso = true;
                         if (selectedPlayerIndex >= 0 && static_cast<size_t>(selectedPlayerIndex) < playersCount) {
                             Nodo<Jugador>* nodo = players.getCabeza();
                             size_t idx = 0;
@@ -810,7 +915,7 @@ public:
                         }
                     } if (blev4.getGlobalBounds().contains(world)) {
                         state = GameState::PLAYING;
-
+                        paso = true;
                         if (selectedPlayerIndex >= 0 && static_cast<size_t>(selectedPlayerIndex) < playersCount) {
                             Nodo<Jugador>* nodo = players.getCabeza();
                             size_t idx = 0;
@@ -830,7 +935,7 @@ public:
 
                     } if (blev5.getGlobalBounds().contains(world)) {
                         state = GameState::PLAYING;
-
+                        paso = true;
                         if (selectedPlayerIndex >= 0 && static_cast<size_t>(selectedPlayerIndex) < playersCount) {
                             Nodo<Jugador>* nodo = players.getCabeza();
                             size_t idx = 0;
@@ -1200,71 +1305,80 @@ public:
                  nivel1 = nivel;
             }
             c++;*/
+            //string noP = "Sin puntuacion";
             if (nivel>0) {
-                level1.setString("Nivel 1: Bloqueado   " + std::to_string(playerscore));
-                level2.setString("Nivel 2: Bloqueado   " + std::to_string(playerscore));
-                level3.setString("Nivel 3: Bloqueado   " + std::to_string(playerscore));
-                level4.setString("Nivel 4: Bloqueado   " + std::to_string(playerscore));
-                level5.setString("Nivel 5: Bloqueado   " + std::to_string(playerscore));
+                level1.setString("Nivel 1: Bloqueado   ");
+                level2.setString("Nivel 2: Bloqueado   " );
+                level3.setString("Nivel 3: Bloqueado   " );
+                level4.setString("Nivel 4: Bloqueado   " );
+                level5.setString("Nivel 5: Bloqueado   ");
             }
            if(nivel > 1) {
-                level2.setString("Nivel 2: Bloqueado   " + std::to_string(playerscore));
-                level3.setString("Nivel 3: Bloqueado   " + std::to_string(playerscore));
-                level4.setString("Nivel 4: Bloqueado   " + std::to_string(playerscore));
-                level5.setString("Nivel 5: Bloqueado   " + std::to_string(playerscore));
-                level1.setString("Nivel 1: Completado   " + std::to_string(playerscore));
-                blev1.setPosition(500, 200);
+                level2.setString("Nivel 2: Bloqueado   ");
+                level3.setString("Nivel 3: Bloqueado   ");
+                level4.setString("Nivel 4: Bloqueado   ");
+                level5.setString("Nivel 5: Bloqueado   ");
+                level1.setString("Nivel 1: Completado   " + std::to_string(board.getscore1()));
+                blev1.setPosition(470, 155);
                 window.draw(blev1);
+                window.draw(blev1T);
                
             }
           if (nivel > 2) {
-                level3.setString("Nivel 3: Bloqueado   " + std::to_string(playerscore));
-                level4.setString("Nivel 4: Bloqueado   " + std::to_string(playerscore));
-                level5.setString("Nivel 5: Bloqueado   " + std::to_string(playerscore));
-                level1.setString("Nivel 1: Desbloqueado   " + std::to_string(playerscore));
-                level2.setString("Nivel 2: Desbloqueado   " + std::to_string(playerscore));
-                blev2.setPosition(500, 250);
+                level3.setString("Nivel 3: Bloqueado   ");
+                level4.setString("Nivel 4: Bloqueado   ");
+                level5.setString("Nivel 5: Bloqueado   ");
+                level1.setString("Nivel 1: Desbloqueado   " + std::to_string(board.getscore1()));
+                level2.setString("Nivel 2: Desbloqueado   " + std::to_string(board.getscore2()));
+                blev2.setPosition(470, 205);
                 window.draw(blev2);
+                window.draw(blev2T);
            }
           
             if (nivel > 3) {
-                level4.setString("Nivel 4: Bloqueado   " + std::to_string(playerscore));
-                level5.setString("Nivel 5: Bloqueado   " + std::to_string(playerscore));
-                level1.setString("Nivel 1: Desbloqueado   " + std::to_string(playerscore));
-                level2.setString("Nivel 2: Desbloqueado   " + std::to_string(playerscore));
-                level3.setString("Nivel 3: Desbloqueado   " + std::to_string(playerscore));
-                blev3.setPosition(500, 300);
+                level4.setString("Nivel 4: Bloqueado   ");
+                level5.setString("Nivel 5: Bloqueado   ");
+                level1.setString("Nivel 1: Desbloqueado   " + std::to_string(board.getscore1()));
+                level2.setString("Nivel 2: Desbloqueado   " + std::to_string(board.getscore2()));
+                level3.setString("Nivel 3: Desbloqueado   " + std::to_string(board.getscore3()));
+                blev3.setPosition(470, 255);
                 window.draw(blev3);
+                window.draw(blev3T);
             }
        
            
                 
             if (nivel > 4) {
-                level5.setString("Nivel 5: Bloqueado   " + std::to_string(playerscore));
-                level1.setString("Nivel 1: Desbloqueado   " + std::to_string(playerscore));
-                level2.setString("Nivel 2: Desbloqueado   " + std::to_string(playerscore));
-                level3.setString("Nivel 3: Desbloqueado   " + std::to_string(playerscore));
-                level4.setString("Nivel 4: Desbloqueado   " + std::to_string(playerscore));
-                blev4.setPosition(500, 350);
+                level5.setString("Nivel 5: Bloqueado   ");
+                level1.setString("Nivel 1: Desbloqueado   " + std::to_string(board.getscore1()));
+                level2.setString("Nivel 2: Desbloqueado   " + std::to_string(board.getscore2()));
+                level3.setString("Nivel 3: Desbloqueado   " + std::to_string(board.getscore3()));
+                level4.setString("Nivel 4: Desbloqueado   " + std::to_string(board.getscore4()));
+                blev4.setPosition(470, 305);
                 window.draw(blev4);
+                window.draw(blev4T);
             }
             if (nivel > 5) {
-                level5.setString("Nivel 5: Desbloqueado   " + std::to_string(playerscore));
-                level1.setString("Nivel 1: Desbloqueado   " + std::to_string(playerscore));
-                level2.setString("Nivel 2: Desbloqueado   " + std::to_string(playerscore));
-                level3.setString("Nivel 3: Desbloqueado   " + std::to_string(playerscore));
-                level4.setString("Nivel 4: Desbloqueado   " + std::to_string(playerscore));
-                blev5.setPosition(500, 400);
+                level5.setString("Nivel 5: Desbloqueado   " + std::to_string(board.getscore5()));
+                level1.setString("Nivel 1: Desbloqueado   " + std::to_string(board.getscore1()));
+                level2.setString("Nivel 2: Desbloqueado   " + std::to_string(board.getscore2()));
+                level3.setString("Nivel 3: Desbloqueado   " + std::to_string(board.getscore3()));
+                level4.setString("Nivel 4: Desbloqueado   " + std::to_string(board.getscore4()));
+                blev5.setPosition(470, 355);
                 window.draw(blev5);
+                window.draw(blev5T);
             }
 
-
+            total.setString("Puntaje Total: \t\t\t "+std::to_string(playerscore));
             window.draw(level1);
             window.draw(level2);
             window.draw(level3);
             window.draw(level4);
             window.draw(level5);
-       
+            window.draw(total);
+            window.draw(menuButton2);
+            window.draw(menuButtonText2);
+
             //window.draw(btn1);
         
         }
@@ -1276,7 +1390,9 @@ public:
             window.draw(scoreText);
             window.draw(movesText);
             window.draw(levelText);
-
+            window.draw(menuButton1);
+            window.draw(menuButtonText1);
+        
             sf::Text objTitle, objProgress;
             objTitle.setFont(font);
             objTitle.setCharacterSize(18);

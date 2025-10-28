@@ -875,7 +875,12 @@ public:
             reiniciar++;
         }
         else if (getLevel() == 3) {
-            acumulateSocereLevel[2] = 0 + score;
+            if (reiniciar > 0) {
+                acumalateScore = acumalateScore - acumulateSocereLevel[1];
+            }
+            acumulateSocereLevel[2] = score;
+            acumalateScore = acumalateScore + acumulateSocereLevel[1];
+            reiniciar++;
         }
         
         
@@ -885,6 +890,24 @@ public:
         
       
     }
+    int getscore1() {
+        return acumulateSocereLevel[0];
+    }
+    int getscore2() {
+        return acumulateSocereLevel[1];
+    }
+        int getscore3() {
+            return acumulateSocereLevel[2];
+        }
+        int getscore4() {
+            return acumulateSocereLevel[3];
+        }
+    int getscore5() {
+        return acumulateSocereLevel[4];
+                }
+            
+        
+    
     void setReiniciar() { reiniciar = 0; }
     int getRemainingMoves() const { return remainingMoves; }
     bool hasMoves() const { return remainingMoves > 0; }
