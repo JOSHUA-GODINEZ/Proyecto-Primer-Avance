@@ -72,6 +72,47 @@ public:
         return false;
     }
 
+
+
+
+    bool reiniciar(const T& dato) {
+        if (estaVacia()) return false;
+        Nodo<T>* actual = cabeza;
+        Nodo<T>* anterior = nullptr;
+        while (actual != nullptr) {
+            if (actual->dato == dato) {
+                if (anterior == nullptr) {
+                    cabeza = actual->siguiente;
+                }
+                else {
+                    anterior->siguiente = actual->siguiente;
+                }
+          // volver a nivel por defecto
+        
+                return true;
+            }
+            anterior = actual;
+            actual = actual->siguiente;
+        }
+        return false;
+    }
+
+
+
+
+
+
+    bool vaciarDatos() {
+        Nodo<T>* actual = cabeza;
+        while (actual != nullptr) {
+            // Si T tiene los miembros 'nombre' y 'puntaje'
+            actual->dato.nombre = "";
+            actual->dato.puntaje = 0;
+            actual = actual->siguiente;
+        }
+        return false;
+    }
+
     // vaciar lista
     void vaciar() {
         Nodo<T>* aux = cabeza;

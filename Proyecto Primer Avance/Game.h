@@ -103,6 +103,45 @@ private:
 
     // Archivo XML donde se guardan jugadores
     const std::string playersFilePath = "players.xml";
+    // Obtiene Nodo<Jugador>* por índice (0-based). Retorna nullptr si no existe.
+    Nodo<Jugador>* getNodeAtIndex(size_t index) {
+        Nodo<Jugador>* nodo = players.getCabeza();
+        size_t i = 0;
+        while (nodo != nullptr) {
+            if (i == index) return nodo;
+            nodo = nodo->siguiente;
+            ++i;
+        }
+        return nullptr;
+    }
+
+    // Reinicia solo el jugador en 'index' (sin eliminar nodos)
+    void reiniciarJugadorAtIndex(size_t index) {
+        Nodo<Jugador>* nodo = getNodeAtIndex(index);
+        if (!nodo) return;
+        // Reiniciar datos del Jugador (usa constructor por defecto)
+        nodo->dato = Jugador(); // nombre="", puntaje=0, nivel=1, etc.
+
+        // Reiniciar scores del board (ajusta si tus setters esperan parámetros)
+        board.setscore1();
+        board.setscore2();
+        board.setscore3();
+        board.setscore4();
+        board.setscore5();
+
+        // Si el jugador reiniciado era el seleccionado, deseleccionar y limpiar nombre mostrado
+        if (selectedPlayerIndex == static_cast<int>(index)) {
+            selectedPlayerIndex = -1;
+            nombre.clear();
+        }
+        else if (selectedPlayerIndex > static_cast<int>(index)) {
+            // ajustar índice si hacía referencia a un nodo posterior al reiniciado (por seguridad)
+            selectedPlayerIndex--;
+        }
+
+        // Persistir cambios y terminar
+        savePlayersToFile();
+    }
 
     void ordenarJugadoresPorPuntaje() {
         if (players.getCabeza() == nullptr) return;
@@ -312,7 +351,7 @@ private:
             }
 
             pos = pend + 9; // después de </player>
-            //ordenarJugadoresPorPuntaje();
+            ordenarJugadoresPorPuntaje();
         }
        
     }
@@ -747,7 +786,7 @@ public:
                     if (!nombre.empty()) {
                         if (playersCount < maxPlayers) {
                             players.agregarFinal(Jugador(nombre,0,1,0,0,0,0,0)); // empieza con 0
-                            //ordenarJugadoresPorPuntaje();
+                            ordenarJugadoresPorPuntaje();
 
                             playersCount++;
                             selectedPlayerIndex = static_cast<int>(playersCount) - 1;
@@ -801,32 +840,67 @@ public:
                         //    break;
                         //}
                         if (btn3.contains(world)) {
-                            if (selectedPlayerIndex >= 0 && static_cast<size_t>(selectedPlayerIndex) < playersCount) {
-                                pass = true;
-                                Nodo<Jugador>* nodo = players.getCabeza();
-                                size_t idx = 0;
-                                while (nodo != nullptr && idx < static_cast<size_t>(selectedPlayerIndex)) {
-                                    nodo = nodo->siguiente;
-                                    ++idx;
-                                }
-                                if (nodo != nullptr) {
-                                  
-                                    // sumamos al jugador
-                                    nodo->dato.nivel = 1;
-                                    nodo->dato.puntaje = 0;
-                                    nodo->dato.level1=0;
-                                    nodo->dato.level2=0;
-                                    nodo->dato.level3=0;
-                                    nodo->dato.level4=0;
-                                    nodo->dato.level5=0;
-                                    board.setscore1();
-                                    board.setscore2();
-                                    board.setscore3();
-                                    board.setscore4();
-                                    board.setscore5();
-                                    savePlayersToFile(); // guardamos en el XML
-                                }
-                            }
+                            // Reiniciar datos del jugador seleccionado (no elimina el nodo)
+                            //if (selectedPlayerIndex >= 0 && static_cast<size_t>(selectedPlayerIndex) < playersCount) {
+                              pass = true; // si usas esta bandera en tu lógica, la mantenemos
+                            //    Nodo<Jugador>* nodo = players.getCabeza();
+                            //    size_t idx = 0;
+                            //    while (nodo != nullptr && idx < static_cast<size_t>(selectedPlayerIndex)) {
+                            //        nodo = nodo->siguiente;
+                            //        ++idx;
+                            //    }
+                            //    if (nodo != nullptr) {
+                            //        // Reiniciar campos del jugador (ajusta nombres si tu Jugador usa otros campos)
+                            //        nodo->dato.nivel = 1;       // volver a nivel por defecto
+                            //        nodo->dato.puntaje = 0;
+                            //        nodo->dato.level1 = 0;
+                            //        nodo->dato.level2 = 0;
+                            //        nodo->dato.level3 = 0;
+                            //        nodo->dato.level4 = 0;
+                            //        nodo->dato.level5 = 0;
+
+                            //        // Reiniciar datos del board (llama tus setters)
+                            //        board.setscore1();
+                            //        board.setscore2();
+                            //        board.setscore3();
+                            //        board.setscore4();
+                            //        board.setscore5();
+
+                            //        // Persistir cambios
+                            //        savePlayersToFile();
+                            //    }
+                            //    // romper si esto está dentro del bucle que itera nodos,
+                            //    // para no seguir usando un puntero que ya pudo cambiar lógicamente
+                            //    break;
+                            //}
+                            Jugador toRemove = nodo->dato;
+
+                           // bool removed = players.reiniciar(toRemove);
+                            
+                               // if (playersCount > 0) playersCount--;
+
+                   
+                                 //   selectedPlayerIndex = -1;
+                                    nodo->dato.nivel = 1;       // volver a nivel por defecto
+                                                nodo->dato.puntaje = 0;
+                                                nodo->dato.level1 = 0;
+                                                nodo->dato.level2 = 0;
+                                                nodo->dato.level3 = 0;
+                                                nodo->dato.level4 = 0;
+                                                nodo->dato.level5 = 0;
+
+                                                // Reiniciar datos del board (llama tus setters)
+                                                board.setscore1();
+                                                board.setscore2();
+                                                board.setscore3();
+                                                board.setscore4();
+                                                board.setscore5();
+                               
+                                // persistir inmediatamente
+                                savePlayersToFile();
+                                ordenarJugadoresPorPuntaje();
+                            // romper para no iterar con puntero invalidado
+                            break;
                         
                         }
                         else { pass = false; }
@@ -840,6 +914,11 @@ public:
                             board.resetBoard();
 
                             state = GameState::MENU; // o GameState::PLAYING si prefieres iniciar ya
+                            board.setscore1();
+                            board.setscore2();
+                            board.setscore3();
+                            board.setscore4();
+                            board.setscore5();
                             break;
                         }
 
@@ -1075,6 +1154,8 @@ public:
                         return;
                     }
                     if (leaveButton.getGlobalBounds().contains(world)) {
+                      
+                        
                         if (selectedPlayerIndex >= 0 && static_cast<size_t>(selectedPlayerIndex) < playersCount) {
                             Nodo<Jugador>* nodo = players.getCabeza();
                             size_t idx = 0;
@@ -1132,6 +1213,7 @@ public:
                                 if (board.getscore5() != 0)
                                 nodo->dato.level5 = board.getscore5();
                                 nodo->dato.puntaje = nodo->dato.level1+ nodo->dato.level2+ nodo->dato.level3+ nodo->dato.level4+ nodo->dato.level5;
+                                ordenarJugadoresPorPuntaje();
                                 savePlayersToFile(); // guardamos en el XML
                             }
                         }
