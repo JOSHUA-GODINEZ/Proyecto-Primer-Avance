@@ -32,9 +32,9 @@ private:
 
     // gameplay
     int remainingMoves = 3; // fixes: default 10 and no variation by difficulty
-    int score = 0;
+    int score=0;
     int acumalateScore=0;
-    int acumulateSocereLevel[3] = {0,0,0};
+    int acumulateSocereLevel[5];
     int level =1;
     int super = -1;       
     int superR = -1;      
@@ -57,9 +57,9 @@ private:
     int selectedRow = -1, selectedCol = -1;
 
     //Ajustes de probabilidades por nivel
-    int initBombChance[4] = { 0, 5, 3, 1 };   // índice 1..3 válido
-    int initIceChance[4] = { 0, 5, 12, 20 };
-    int refillBombChance[4] = { 0, 5, 3, 1 };
+    int initBombChance[6] = { 0, 5, 4, 3,2,1 };   // índice 1..3 válido
+    int initIceChance[6] = { 0, 4, 6, 8,10,12 };
+    int refillBombChance[6] = {0 , 5, 4, 3,2,2 };
 
 
    // Objetivo del nivel 
@@ -140,10 +140,20 @@ public:
         }
         else if (lvl == 2) {
             objectiveKind = 2;
-            objectiveTarget = 3;
+            objectiveTarget = 1;
         }
         else if (lvl == 3) {
             objectiveKind = 3;
+            objectiveTarget = 3;
+           // objectiveProgress = score; // starts at current score
+        }
+        else if (lvl == 4) {
+            objectiveKind = 4;
+            objectiveTarget = 3;
+           // objectiveProgress = score; // starts at current score
+        }
+        else if (lvl == 5) {
+            objectiveKind = 5;
             objectiveTarget = 200;
             objectiveProgress = score; // starts at current score
         }
@@ -158,9 +168,15 @@ public:
             }
         }
         else if (objectiveKind == 2) {
-            if (fruitType == ICE_INDEX) objectiveProgress++;
+           
         }
         else if (objectiveKind == 3) {
+            if (fruitType == BOMB_INDEX) objectiveProgress++;
+        }
+        else if (objectiveKind == 4) {
+            if (fruitType == ICE_INDEX) objectiveProgress++;
+        }
+        else if (objectiveKind == 5) {
             // para objetivo de puntos, el progreso está ligado al score; lo actualizaremos fuera
         }
     }
@@ -492,7 +508,7 @@ public:
                         if (super >= 0 && super <= 4 && r == superR && c == superC) {
                             delete matrix[r][c];
                             matrix[r][c] = new SuperFruit(textures[7 + super], cellCenter(r, c), super);
-
+                            if (objectiveKind == 2)objectiveProgress++;
                             // opcional: ajustar visual (por ejemplo, destacar)
                            // matrix[r][c]->resetVisual()
                             super = -1;
@@ -509,7 +525,8 @@ public:
                         anyRemoval = true;
                         score += 10;
 
-                        if (objectiveKind == 3) objectiveProgress = score;
+                        if (objectiveKind == 5) objectiveProgress = score;
+                        //if(objectiveKind == 4)
                     }
                 }
                 // reset flags and visuals
@@ -822,7 +839,7 @@ public:
         }
         remainingMoves = 3;
       //  level = getLevel();
-        score = 0;
+        score=0;
         super = 0;
         cleaningInProgress = false;
         removalPending = false;
@@ -882,7 +899,22 @@ public:
             acumalateScore = acumalateScore + acumulateSocereLevel[1];
             reiniciar++;
         }
-        
+        else if (getLevel() == 4) {
+            if (reiniciar > 0) {
+                acumalateScore = acumalateScore - acumulateSocereLevel[1];
+            }
+            acumulateSocereLevel[3] = score;
+            acumalateScore = acumalateScore + acumulateSocereLevel[1];
+            reiniciar++;
+        }
+        else if (getLevel() == 5) {
+            if (reiniciar > 0) {
+                acumalateScore = acumalateScore - acumulateSocereLevel[1];
+            }
+            acumulateSocereLevel[4] = score;
+            acumalateScore = acumalateScore + acumulateSocereLevel[1];
+            reiniciar++;
+        }
         
         return acumalateScore;
         
@@ -896,16 +928,30 @@ public:
     int getscore2() {
         return acumulateSocereLevel[1];
     }
-        int getscore3() {
-            return acumulateSocereLevel[2];
-        }
-        int getscore4() {
+    int getscore3() {
+        return acumulateSocereLevel[2];
+    }  
+    int getscore4() {
             return acumulateSocereLevel[3];
         }
     int getscore5() {
         return acumulateSocereLevel[4];
                 }
-            
+    void setscore1() {
+       acumulateSocereLevel[0]=0;
+    }
+    void setscore2() {
+        acumulateSocereLevel[1]=0;
+    }
+    void setscore3() {
+         acumulateSocereLevel[2]=0;
+    }
+    void setscore4() {
+         acumulateSocereLevel[3]=0;
+    }
+    void setscore5() {
+         acumulateSocereLevel[4]=0;
+    }
         
     
     void setReiniciar() { reiniciar = 0; }
@@ -935,15 +981,22 @@ public:
             }
         }
         else if (objectiveKind == 2) {
-            return "Eliminar " + to_string(objectiveTarget) + " hielos";
+            return "Crear " + to_string(objectiveTarget) + " super frutas";
         }
         else if (objectiveKind == 3) {
+            return "Elimina " + to_string(objectiveTarget) +" Bombas";
+        }
+        else if (objectiveKind == 4) {
+           
+            return "Eliminar " + to_string(objectiveTarget) + " hielos";
+        }
+        else if (objectiveKind == 5) {
             return "Conseguir " + to_string(objectiveTarget) + " puntos";
         }
         return "";
     }
     string getObjectiveProgressText() const {
-        if (objectiveKind == 1 || objectiveKind == 2) {
+        if (objectiveKind == 1 || objectiveKind == 2 || objectiveKind == 4 || objectiveKind == 5) {
             return to_string(objectiveProgress) + " / " + to_string(objectiveTarget);
         }
         else if (objectiveKind == 3) {
