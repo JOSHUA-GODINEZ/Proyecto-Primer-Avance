@@ -21,10 +21,6 @@ public:
     bool operator==(const Jugador& other) const {
         return nombre == other.nombre;
     }
-
-    std::string toString() const {
-        return nombre + " (" + std::to_string(puntaje) + ")";
-    }
 };
 
 
@@ -103,45 +99,7 @@ private:
 
     // Archivo XML donde se guardan jugadores
     const std::string playersFilePath = "players.xml";
-    // Obtiene Nodo<Jugador>* por índice (0-based). Retorna nullptr si no existe.
-    Nodo<Jugador>* getNodeAtIndex(size_t index) {
-        Nodo<Jugador>* nodo = players.getCabeza();
-        size_t i = 0;
-        while (nodo != nullptr) {
-            if (i == index) return nodo;
-            nodo = nodo->siguiente;
-            ++i;
-        }
-        return nullptr;
-    }
-
-    // Reinicia solo el jugador en 'index' (sin eliminar nodos)
-    void reiniciarJugadorAtIndex(size_t index) {
-        Nodo<Jugador>* nodo = getNodeAtIndex(index);
-        if (!nodo) return;
-        // Reiniciar datos del Jugador (usa constructor por defecto)
-        nodo->dato = Jugador(); // nombre="", puntaje=0, nivel=1, etc.
-
-        // Reiniciar scores del board (ajusta si tus setters esperan parámetros)
-        board.setscore1();
-        board.setscore2();
-        board.setscore3();
-        board.setscore4();
-        board.setscore5();
-
-        // Si el jugador reiniciado era el seleccionado, deseleccionar y limpiar nombre mostrado
-        if (selectedPlayerIndex == static_cast<int>(index)) {
-            selectedPlayerIndex = -1;
-            nombre.clear();
-        }
-        else if (selectedPlayerIndex > static_cast<int>(index)) {
-            // ajustar índice si hacía referencia a un nodo posterior al reiniciado (por seguridad)
-            selectedPlayerIndex--;
-        }
-
-        // Persistir cambios y terminar
-        savePlayersToFile();
-    }
+  
 
     void ordenarJugadoresPorPuntaje() {
         if (players.getCabeza() == nullptr) return;
@@ -355,7 +313,6 @@ private:
         }
        
     }
-    int getlevel() { return level; }
 public:
     Game() : board() {
         // Configuración view
@@ -531,7 +488,7 @@ public:
 
         // Menu UI: play button, title, difficulty, boxes...
         playButton.setSize(sf::Vector2f(250.f, 85.f));
-        playButton.setPosition(280.f, 150.f);
+        playButton.setPosition(280.f, 110.f);
         playButton.setFillColor(sf::Color(100, 255, 100, 255));
 
         playButtonText.setFont(font);
@@ -546,26 +503,26 @@ public:
         titleText.setFillColor(sf::Color::Black);
         titleText.setPosition(270.f, 20.f);
 
-        progress.setSize(sf::Vector2f(220.f, 60.f));
-        progress.setPosition(500.f, 500.f);
+        progress.setSize(sf::Vector2f(115.f, 35.f));
+        progress.setPosition(5.f, 40.f);
         progress.setFillColor(sf::Color(200, 200, 200, 255));
         progress.setOutlineThickness(3.f);
         progress.setOutlineColor(sf::Color::Black);
 
         Tprogress.setFont(font);
-        Tprogress.setCharacterSize(42);
+        Tprogress.setCharacterSize(25);
         Tprogress.setString("Progreso");
         Tprogress.setFillColor(sf::Color::Black);
-        Tprogress.setPosition(progress.getPosition().x + 10.f, progress.getPosition().y);
+        Tprogress.setPosition(progress.getPosition().x + 8.f, progress.getPosition().y);
 
         dificulty.setFont(font);
         dificulty.setCharacterSize(40);
         dificulty.setString("DIFICULTAD");
         dificulty.setFillColor(sf::Color::Black);
-        dificulty.setPosition(290.f, 270.f);
+        dificulty.setPosition(290.f, 210.f);
 
         easyB.setSize(sf::Vector2f(220.f, 60.f));
-        easyB.setPosition(80.f, 350.f);
+        easyB.setPosition(80.f, 280.f);
         easyB.setFillColor(sf::Color(200, 200, 200, 255));
         easyB.setOutlineThickness(3.f);
         easyB.setOutlineColor(sf::Color::Black);
@@ -578,7 +535,7 @@ public:
         easy.setPosition(easyB.getPosition().x + 40.f, easyB.getPosition().y);
 
         hardB.setSize(sf::Vector2f(220.f, 60.f));
-        hardB.setPosition(500.f, 350.f);
+        hardB.setPosition(500.f, 280.f);
         hardB.setFillColor(sf::Color(200, 200, 200, 255));
         hardB.setOutlineThickness(3.f);
         hardB.setOutlineColor(sf::Color::Black);
@@ -590,7 +547,7 @@ public:
         hard.setPosition(hardB.getPosition().x + 40.f, hardB.getPosition().y);
 
         outB.setSize(sf::Vector2f(200.f, 55.f));
-        outB.setPosition(300.f, 450.f);
+        outB.setPosition(300.f, 500.f);
         outB.setFillColor(sf::Color(255, 100, 100, 255));
         outB.setOutlineThickness(3.f);
         outB.setOutlineColor(sf::Color::Black);
@@ -602,7 +559,7 @@ public:
         outText.setPosition(outB.getPosition().x + 40.f, outB.getPosition().y);
 
         playersBox.setSize(sf::Vector2f(220.f, 60.f));
-        playersBox.setPosition(80.f, 500.f);
+        playersBox.setPosition(290.f, 380.f);
         playersBox.setFillColor(sf::Color(200, 200, 200, 255));
         playersBox.setOutlineThickness(3.f);
         playersBox.setOutlineColor(sf::Color::Black);
@@ -702,7 +659,6 @@ public:
         menuButtonText2.setFillColor(sf::Color::Black);
         menuButtonText2.setPosition(menuButton2.getPosition().x - 95.f, menuButton2.getPosition().y - 12.f);
 
-
         // Default difficulty
         hardSelected = false;
         easyB.setFillColor(sf::Color(100, 255, 100, 255));
@@ -724,12 +680,9 @@ public:
         }
 
     }
-
     ~Game() {
-        // Guardar players al destruir (por si el cierre no pasó por Event::Closed)
         savePlayersToFile();
     }
-
     // ---------------- Process events ----------------
     void processEvents() {
         sf::Event event;
@@ -793,7 +746,6 @@ public:
                             savePlayersToFile();
                         }
                     }
-
                 }
                 else if (event.key.code == sf::Keyboard::Escape) {
                     isTyping = false;
@@ -832,70 +784,24 @@ public:
                         sf::FloatRect btnRect(btn1X, y, buttonW, buttonH);
                         sf::FloatRect btnRect2(btn2X, y, buttonW, buttonH);
                         sf::FloatRect btn3(btn2X+55, y, buttonW, buttonH);
-                        //if (nameRect.contains(world)) {
-                        //    // seleccionar nombre (solo visual)
-                        //    nombre = nodo->dato.nombre;
-             
-                        //    selectedPlayerIndex = static_cast<int>(i);
-                        //    break;
-                        //}
+                     
                         if (btn3.contains(world)) {
-                            // Reiniciar datos del jugador seleccionado (no elimina el nodo)
-                            //if (selectedPlayerIndex >= 0 && static_cast<size_t>(selectedPlayerIndex) < playersCount) {
-                              pass = true; // si usas esta bandera en tu lógica, la mantenemos
-                            //    Nodo<Jugador>* nodo = players.getCabeza();
-                            //    size_t idx = 0;
-                            //    while (nodo != nullptr && idx < static_cast<size_t>(selectedPlayerIndex)) {
-                            //        nodo = nodo->siguiente;
-                            //        ++idx;
-                            //    }
-                            //    if (nodo != nullptr) {
-                            //        // Reiniciar campos del jugador (ajusta nombres si tu Jugador usa otros campos)
-                            //        nodo->dato.nivel = 1;       // volver a nivel por defecto
-                            //        nodo->dato.puntaje = 0;
-                            //        nodo->dato.level1 = 0;
-                            //        nodo->dato.level2 = 0;
-                            //        nodo->dato.level3 = 0;
-                            //        nodo->dato.level4 = 0;
-                            //        nodo->dato.level5 = 0;
-
-                            //        // Reiniciar datos del board (llama tus setters)
-                            //        board.setscore1();
-                            //        board.setscore2();
-                            //        board.setscore3();
-                            //        board.setscore4();
-                            //        board.setscore5();
-
-                            //        // Persistir cambios
-                            //        savePlayersToFile();
-                            //    }
-                            //    // romper si esto está dentro del bucle que itera nodos,
-                            //    // para no seguir usando un puntero que ya pudo cambiar lógicamente
-                            //    break;
-                            //}
+                              pass = true;
                             Jugador toRemove = nodo->dato;
 
-                           // bool removed = players.reiniciar(toRemove);
-                            
-                               // if (playersCount > 0) playersCount--;
-
-                   
-                                 //   selectedPlayerIndex = -1;
                                     nodo->dato.nivel = 1;       // volver a nivel por defecto
-                                                nodo->dato.puntaje = 0;
-                                                nodo->dato.level1 = 0;
-                                                nodo->dato.level2 = 0;
-                                                nodo->dato.level3 = 0;
-                                                nodo->dato.level4 = 0;
-                                                nodo->dato.level5 = 0;
-
+                                    nodo->dato.puntaje = 0;
+                                    nodo->dato.level1 = 0;
+                                    nodo->dato.level2 = 0;
+                                    nodo->dato.level3 = 0;
+                                    nodo->dato.level4 = 0;
+                                    nodo->dato.level5 = 0;
                                                 // Reiniciar datos del board (llama tus setters)
-                                                board.setscore1();
-                                                board.setscore2();
-                                                board.setscore3();
-                                                board.setscore4();
-                                                board.setscore5();
-                               
+                                    board.setscore1();
+                                    board.setscore2();
+                                    board.setscore3();
+                                    board.setscore4();
+                                    board.setscore5();
                                 // persistir inmediatamente
                                 savePlayersToFile();
                                 ordenarJugadoresPorPuntaje();
@@ -957,11 +863,7 @@ public:
                         }
                     }
                     if (progress.getGlobalBounds().contains(world)) {
-                        state = GameState::PROGRESS;
-
-                           
-                          
-                        
+                        state = GameState::PROGRESS; 
                     }
                     if (playersBox.getGlobalBounds().contains(world)) {
                         state = GameState::USERS;
@@ -1098,8 +1000,6 @@ public:
                                 ++idx;
                             }
                             if (nodo != nullptr) {
-                                
-                                // sumamos al jugador
                                 nodo->dato.nivel--;
                                 board.setLevelPublic(4);
                                 board.resetBoard();
@@ -1126,24 +1026,7 @@ public:
                                 savePlayersToFile(); // guardamos en el XML
                             }
                         }
-                    }
-                
-                
-                
-                
-                
-                
-                
-                
-                
-                
-                
-                
-                
-                
-                
-                
-                
+                    }   
                 }
                 else if (state == GameState::GAME_OVER) {
                  //   Nodo<Jugador>* nodo = players.getCabeza();
@@ -1154,8 +1037,6 @@ public:
                         return;
                     }
                     if (leaveButton.getGlobalBounds().contains(world)) {
-                      
-                        
                         if (selectedPlayerIndex >= 0 && static_cast<size_t>(selectedPlayerIndex) < playersCount) {
                             Nodo<Jugador>* nodo = players.getCabeza();
                             size_t idx = 0;
@@ -1164,8 +1045,7 @@ public:
                                 ++idx;
                             }
                             if (nodo != nullptr) {
-                                
-                                // sumamos al jugador
+                              // sumamos al jugador
                                 int playerLevel = nodo->dato.nivel++;
                                 if (playerLevel + 1 < 6)
                                 board.setLevelPublic(playerLevel+1);
@@ -1178,15 +1058,10 @@ public:
                                 savePlayersToFile(); // guardamos en el XML
                             }
                         }
-                       
                         window.close();
                         return;
                     }
                     if (menuButton.getGlobalBounds().contains(world)) {
-                       // board.setLevelPublic(1);
-
-
-
                         if (selectedPlayerIndex >= 0 && static_cast<size_t>(selectedPlayerIndex) < playersCount) {
                             Nodo<Jugador>* nodo = players.getCabeza();
                             size_t idx = 0;
@@ -1217,12 +1092,6 @@ public:
                                 savePlayersToFile(); // guardamos en el XML
                             }
                         }
-
-
-
-
-
-
                         board.resetBoard();
                         state = GameState::MENU;
                         hardSelected = false;
@@ -1230,10 +1099,6 @@ public:
                         hardB.setFillColor(sf::Color(200, 200, 200, 255));
                         board.resetMoves(1);
                         board.setReiniciar();
-
-
-                        
-
                         return;
                     }
                     if (board.getLevel() < 5 && nextLevelButton.getGlobalBounds().contains(world)) {
@@ -1248,8 +1113,6 @@ public:
                                     ++idx;
                                 }
                                 if (nodo != nullptr) {
-
-                                    // sumamos al jugador
                                     int playerLevel = nodo->dato.nivel++;
                                     board.setLevelPublic(playerLevel+1);
                                     board.resetBoard();
@@ -1261,9 +1124,6 @@ public:
                                     savePlayersToFile(); // guardamos en el XML
                                 }
                             }
-                           // int playerLevel = nodo->dato.nivel++;
-                           // board.setLevelPublic(playerLevel);
-                            //board.resetBoard();
                             state = GameState::PLAYING;
                             return;
                         }
@@ -1277,8 +1137,6 @@ public:
     void update() {
         sf::View view(sf::FloatRect(0.f, 0.f, 800.f, 600.f));
         window.setView(view);
-
-
         if (state == GameState::PLAYING) {
             board.updateAnimations();
             if (board.isGravityAnimating()) {
@@ -1299,7 +1157,6 @@ public:
                         nodo = nodo->siguiente;
                         ++idx;
                     }
-
                     if (nodo != nullptr) {
                         int partidaScore = board.getAcumulateScore();
                         nodo->dato.puntaje = partidaScore;
@@ -1311,8 +1168,6 @@ public:
 
                 state = GameState::GAME_OVER;
             }
-
-
             scoreText.setString("PUNTUACIÓN: " + std::to_string(board.getScore()));
             movesText.setString("MOVIMIENTOS: " + std::to_string(board.getRemainingMoves()));
 
@@ -1324,9 +1179,7 @@ public:
 
     // ---------------- Render ----------------
     void render() {
-       
         window.clear(sf::Color::White);
-
         if (state == GameState::USERS) {
             if (menuTexture.getSize().x != 0 && menuTexture.getSize().y != 0) window.draw(menuSprite);
 
@@ -1443,8 +1296,6 @@ public:
                 float by3 = y + (buttonH - btnText3.getCharacterSize()) / 2.f - 2.f;
                 btnText3.setPosition(bx3, by3);
                 window.draw(btnText3);
-
-
             }
         }
         else if (state == GameState::MENU) {
@@ -1480,8 +1331,6 @@ public:
             overlay.setFillColor(sf::Color(255, 255, 255, 200));
             overlay.setPosition(0.f, 0.f);
             window.draw(overlay);
-           // int playerscore=0;
-           // int level = 0;
             if (userTexture.getSize().x != 0 && userTexture.getSize().y != 0) window.draw(userSprite);
             string comp;
             if (selectedPlayerIndex >= 0 && static_cast<size_t>(selectedPlayerIndex) < playersCount) {
@@ -1492,40 +1341,22 @@ public:
                     ++idx;
                 }
                 if (nodo != nullptr) {
-
                     // sumamos al jugador
-                   //  playerscore = nodo->dato.puntaje;
                      nivel= nodo->dato.nivel;
                      nivel1 = nodo->dato.level1;
                      nivel2 = nodo->dato.level2;
                      nivel3 = nodo->dato.level3;
                      nivel4 = nodo->dato.level4;
                      nivel5 = nodo->dato.level5;
-                 //   board.setLevelPublic(playerLevel + 1);
                      playerscore = nivel1 + nivel2 + nivel3 + nivel4 + nivel5;
-                     //nodo->dato.puntaje = playerscore;
-                   
-                  // guardamos en el XML
-                    // nivel1 = 0;
                      if (pass==true) {
                          playerscore = 0;
-                       //  cout << "paso";
                          nivel1 = 0; nivel2 = 0; nivel3 = 0, nivel4 = 0, nivel5 = 0;
-                        
                      }
                      nodo->dato.puntaje = playerscore;
                 }
             }
-         /*   int nivel1;
-            int c = 0;
-            if (c == 0) {
-                 nivel1 = nivel;
-            }
-            c++;*/
-            //string noP = "Sin puntuacion";zz
             window.draw(fondo1);
-
-           // nivel = 6;
             if (nivel>0) {
                 level1.setString("Nivel 1: Bloqueado   ");
                 level2.setString("Nivel 2: Bloqueado   " );
@@ -1542,7 +1373,6 @@ public:
                 blev1.setPosition(470, 155);
                 window.draw(blev1);
                 window.draw(blev1T);
-               
             }
           if (nivel > 2) {
                 level3.setString("Nivel 3: Bloqueado   ");
@@ -1553,7 +1383,7 @@ public:
                 blev2.setPosition(470, 205);
                 window.draw(blev2);
                 window.draw(blev2T);
-           }
+          }
           
             if (nivel > 3) {
                 level4.setString("Nivel 4: Bloqueado   ");
@@ -1565,9 +1395,7 @@ public:
                 window.draw(blev3);
                 window.draw(blev3T);
             }
-       
-           
-                
+         
             if (nivel > 4) {
                 level5.setString("Nivel 5: Bloqueado   ");
                 level1.setString("Nivel 1: Desbloqueado   " + std::to_string(nivel1));
@@ -1599,8 +1427,6 @@ public:
             window.draw(menuButton2);
             window.draw(menuButtonText2);
 
-         
-           // cout << playerscore;
         }
         else if (state == GameState::PLAYING) {
             if (menuTexture.getSize().x != 0 && menuTexture.getSize().y != 0) window.draw(menuSprite);

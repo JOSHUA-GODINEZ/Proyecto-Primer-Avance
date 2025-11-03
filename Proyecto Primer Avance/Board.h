@@ -1,18 +1,16 @@
  #include "Fruit.h"
-// #include "Game.h"
-#include "Lista.h"
+
 class Board {
 private:
-    static constexpr int SIZE = 8;
-    static constexpr int NUM_NORMAL = 5;   // textures 0..4 are normal fruit types
-    static constexpr int BOMB_INDEX = 5;   // index texture for bomb
-    static constexpr int ICE_INDEX = 6;    // index for ice
-    static constexpr int NUM_TEXTURES = 12; // total loaded textures
+    static const int SIZE = 8;
+    static const int NUM_NORMAL = 5;   // textures 0..4 are normal fruit types
+    static const int BOMB_INDEX = 5;   // index texture for bomb
+    static const int ICE_INDEX = 6;    // index for ice
+    static const int NUM_TEXTURES = 12; // total loaded textures
 
     Fruit* matrix[8][8];
     sf::Texture textures[12];
-   // Game G;
-    // layout logical
+
     const float originX = 121.f;
     const float originY = 109.f;
     const float cellW = 69.f;
@@ -40,6 +38,7 @@ private:
     int superR = -1;      
     int superC = -1;      
     int reiniciar = 0;
+
     // gravity animation
     bool gravityAnimating = false;
     float gravityDurationMs = 500.f; 
@@ -49,18 +48,14 @@ private:
     bool pendingSwapCleaning = false;
     float swapDurationMs = 200.f; // duración base del swap en ms
 
-
-
     const float MARK_SCALE = 1.5f;
     const float SELECT_SCALE = 1.25f;
-
     int selectedRow = -1, selectedCol = -1;
 
     //Ajustes de probabilidades por nivel
     int initBombChance[6] = { 0, 5, 4, 3,2,1 };   // índice 1..3 válido
     int initIceChance[6] = { 0, 4, 6, 8,10,12 };
     int refillBombChance[6] = {0 , 5, 4, 3,2,2 };
-
 
    // Objetivo del nivel 
     // kinds: 1 = eliminar tipo normal X (count), 2 = eliminar hielos (count), 3 = alcanzar puntos
@@ -72,7 +67,6 @@ private:
 public:
     Board() {
         srand((time(0)));
-
 
         if (!textures[0].loadFromFile("C:\\Joshua\\Proyecto Primer Avance\\Assets\\Sprite Apple.png")) cerr << "Failed to load textures[0]\n";
         if (!textures[1].loadFromFile("C:\\Joshua\\Proyecto Primer Avance\\Assets\\Sprite Orange.png")) cerr << "Failed to load textures[1]\n";
@@ -87,7 +81,6 @@ public:
         if (!textures[10].loadFromFile("C:\\Joshua\\Proyecto Primer Avance\\Assets\\sandia dorada12.png")) cerr << "Failed to load textures[5]\n";
         if (!textures[11].loadFromFile("C:\\Joshua\\Proyecto Primer Avance\\Assets\\Unvas doradas12.png")) cerr << "Failed to load textures[5]\n";
 
-
         initObjectiveForLevel(level);
 
         for (int r = 0; r < SIZE; ++r)
@@ -96,7 +89,6 @@ public:
                 marked[r][c] = comboMarked[r][c] = forcedBreak[r][c] = false;
             }
 
-      
         for (int r = 0; r < SIZE; ++r) {
             for (int c = 0; c < SIZE; ++c) {
                 sf::Vector2f center = cellCenter(r, c);
@@ -159,7 +151,6 @@ public:
         }
     }
 
-    
     void incrementObjectiveOnDelete(int fruitType) {
         if (objectiveKind == 1) {
             // solo contar si es un normal del tipo objetivo
@@ -179,12 +170,6 @@ public:
         else if (objectiveKind == 5) {
             // para objetivo de puntos, el progreso está ligado al score; lo actualizaremos fuera
         }
-    }
-    void setLevel(int lvl) {
-        if (lvl < 1) lvl = 1;
-        if (lvl > 3) lvl = 3;
-        level = lvl;
-        initObjectiveForLevel(level);
     }
 
     Fruit* createFruitByType(int logicalType, sf::Texture& tex, sf::Vector2f pixelCenter) {
@@ -490,7 +475,6 @@ public:
                     }
                 }
 
-
                 // delete marked cells but respect ice rules (only delete ice if comboMarked or forcedBreak)
                // DELETE / REPLACE marked cells but respect ice rules
     // MARCADO -> iniciar animación (no borrar inmediatamente)
@@ -629,7 +613,6 @@ public:
                 }
             }
         }
-
         gravityAnimating = true;
     }
     int getSuperCount() const { return super; }
@@ -656,7 +639,6 @@ public:
         return true;
     }
 
-
     // Immediate gravity used only in init phase so we don't rely on animation loop
     void applyGravityInstantForInit() {
         for (int c = 0; c < SIZE; ++c) {
@@ -680,8 +662,6 @@ public:
                     matrix[r][c] = createFruitByType(t, textures[t], center);
                 }
             }
-
-
         }
 
         for (int r = 0; r < SIZE; ++r)
@@ -879,7 +859,6 @@ public:
     int getScore() const { return score; }
    
     int getAcumulateScore() {
-      
         if (getLevel() == 1) {
             acumulateSocereLevel[0] = score;
            acumalateScore = acumulateSocereLevel[0];
@@ -917,11 +896,8 @@ public:
         }
         
         return acumalateScore;
-        
-        
-        
-      
     }
+
     int getscore1() {
         return acumulateSocereLevel[0];
     }
@@ -952,8 +928,7 @@ public:
     void setscore5() {
          acumulateSocereLevel[4]=0;
     }
-        
-    
+     
     void setReiniciar() { reiniciar = 0; }
     int getRemainingMoves() const { return remainingMoves; }
     bool hasMoves() const { return remainingMoves > 0; }
