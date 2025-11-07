@@ -1,16 +1,14 @@
-#ifndef LISTA_H
-#define LISTA_H
 
 #include <iostream>
 
 // Nodo template
-template <typename T>
+template <typename Q>
 class Nodo {
 public:
-    T dato;
-    Nodo<T>* siguiente;
+    Q dato;
+    Nodo<Q>* siguiente;
 
-    Nodo(const T& d) : dato(d), siguiente(nullptr) {}
+    Nodo(const Q& d) : dato(d), siguiente(nullptr) {}
 };
 
 // Lista template (simple lista enlazada)
@@ -29,9 +27,6 @@ public:
     bool estaVacia() const {
         return cabeza == nullptr;
     }
-
-    // agregar al inicio
-   
 
     // agregar al final
     void agregarFinal(const T& dato) {
@@ -84,5 +79,3 @@ public:
         return cabeza;
     }
 };
-
-#endif // LISTA_H

@@ -1,28 +1,8 @@
 ﻿#include "Board.h"
 #include "Lista.h"
+#include "Jugador.h"
 // Game (UI + loop)
-#ifndef GAME_H
-#define GAME_H
 #include <fstream>
-
-
-// ---------------- Clase Jugador ----------------
-class Jugador {
-public:
-    std::string nombre;
-    int puntaje;
-    int nivel;
-    int level1, level2, level3, level4, level5;
-    Jugador() : nombre(""), puntaje(0), nivel(0) { level1 = 0; level2 = 0; level3 = 0; level4 = 0; level5 = 0; }
-    Jugador(const std::string& n, int p, int l, int l1, int l2, int l3, int l4, int l5 ) : nombre(n), puntaje(p), nivel(l), level1(l1), level2(l2), level3(l3), level4(l4), level5(l5) {
-
-    }
-
-    bool operator==(const Jugador& other) const {
-        return nombre == other.nombre;
-    }
-};
-
 
 // ---------------- Clase Game ----------------
 class Game {
@@ -42,13 +22,20 @@ private:
     sf::Sprite userSprite;
     int nivel, nivel1, nivel2, nivel3, nivel4, nivel5;
     bool paso;
-
+     int level = 0;
     //Progreso
     sf::Text level1,level2,level3,level4,level5,total;
     sf::RectangleShape blev1, blev2, blev3, blev4, blev5;
     sf::Text  blev1T, blev2T, blev3T, blev4T, blev5T;
     sf::Texture fondo12;
     sf::Sprite fondo1;
+    float playersX = 180.f;
+    float playersY = 210.f;
+    float playerW = 280.f, playerH = 36.f;
+    float buttonW = 50.f, buttonH = 35.f;
+    float gapY = 10.f;
+    float btn1X = playersX + playerW + 8.f;
+    float btn2X = playersX + playerW + 65.f;
 
     // Timing
     sf::Clock cleaningClock;
@@ -101,218 +88,8 @@ private:
     const std::string playersFilePath = "players.xml";
   
 
-    void ordenarJugadoresPorPuntaje() {
-        if (players.getCabeza() == nullptr) return;
-
-        bool swapped;
-        do {
-            swapped = false;
-            Nodo<Jugador>* actual = players.getCabeza();
-
-            while (actual->siguiente != nullptr) {
-                if (actual->dato.puntaje < actual->siguiente->dato.puntaje) {
-                    std::swap(actual->dato, actual->siguiente->dato);
-                    swapped = true;
-                }
-                actual = actual->siguiente;
-            }
-        } while (swapped);
-    }
-
-    // ---------------- Helpers UTF-8 ----------------
-    static void eraseLastUtf8Char(std::string& s) {
-        if (s.empty()) return;
-        size_t i = s.size() - 1;
-        while (i > 0 && (static_cast<unsigned char>(s[i]) & 0xC0) == 0x80) --i;
-        s.erase(i);
-    }
-
-    // ---------------- Helpers XML (escape/unescape) ----------------
-    static std::string escapeXml(const std::string& s) {
-        std::string out;
-        out.reserve(s.size());
-        for (char c : s) {
-            switch (c) {
-            case '&': out += "&amp;"; break;
-            case '<': out += "&lt;"; break;
-            case '>': out += "&gt;"; break;
-            case '"': out += "&quot;"; break;
-            case '\'': out += "&apos;"; break;
-            default: out += c;
-            }
-        }
-        return out;
-    }
-
-    static std::string unescapeXml(const std::string& s) {
-        std::string out;
-        out.reserve(s.size());
-        for (size_t i = 0; i < s.size(); ++i) {
-            if (s[i] == '&') {
-                if (s.compare(i, 5, "&amp;") == 0) { out += '&'; i += 4; }
-                else if (s.compare(i, 4, "&lt;") == 0) { out += '<'; i += 3; }
-                else if (s.compare(i, 4, "&gt;") == 0) { out += '>'; i += 3; }
-                else if (s.compare(i, 6, "&quot;") == 0) { out += '"'; i += 5; }
-                else if (s.compare(i, 6, "&apos;") == 0) { out += '\''; i += 5; }
-                else {
-                    out += '&';
-                }
-            }
-            else {
-                out += s[i];
-            }
-        }
-        return out;
-    }
-
-    // ---------------- Guardar / Cargar XML (sin librerías) ----------------
-    void savePlayersToFile() {
-        std::ofstream f(playersFilePath, std::ofstream::out | std::ofstream::trunc);
-        if (!f.is_open()) {
-            std::cerr << "No se pudo abrir " << playersFilePath << " para guardar.\n";
-            return;
-        }
-        f << "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
-        f << "<players>\n";
-
-        Nodo<Jugador>* nodo = players.getCabeza();
-        while (nodo) {
-            std::string nameEsc = escapeXml(nodo->dato.nombre);
-            int score = nodo->dato.puntaje;
-            int level= nodo->dato.nivel;
-            int level1 = nodo->dato.level1;
-            int level2= nodo->dato.level2;
-            int level3 = nodo->dato.level3;
-            int level4 = nodo->dato.level4;
-            int level5 = nodo->dato.level5;
-            f << "  <player>\n";
-            f << "    <name>" << nameEsc << "</name>\n";
-            f << "    <score>" << score << "</score>\n";
-            f << "    <level>" << level << "</level>\n";
-            f << "    <level1>" << level1 << "</level1>\n";
-            f << "    <level2>" << level2 << "</level2>\n";
-            f << "    <level3>" << level3 << "</level3>\n";
-            f << "    <level4>" << level4 << "</level4>\n";
-            f << "    <level5>" << level5 << "</level5>\n";
-            f << "  </player>\n";
-            nodo = nodo->siguiente;
-        }
-
-        f << "</players>\n";
        
-
-        f.close();
-    }
-    int level = 0;
-    void loadPlayersFromFile() {
-        std::ifstream f(playersFilePath);
-        if (!f.is_open()) {
-            // no existe => comenzamos con lista vacía
-            return;
-        }
-
-        // Leer todo a string
-        std::string content;
-        f.seekg(0, std::ios::end);
-        content.reserve((size_t)f.tellg());
-        f.seekg(0, std::ios::beg);
-        content.assign((std::istreambuf_iterator<char>(f)), std::istreambuf_iterator<char>());
-        f.close();
-
-        players.vaciar();
-        playersCount = 0;
-
-        size_t pos = 0;
-        while (playersCount < maxPlayers) {
-            size_t pstart = content.find("<player", pos);
-            if (pstart == std::string::npos) break;
-            size_t pclose = content.find(">", pstart);
-            if (pclose == std::string::npos) break;
-            size_t pend = content.find("</player>", pclose);
-            if (pend == std::string::npos) break;
-
-            std::string block = content.substr(pclose + 1, pend - (pclose + 1));
-
-            std::string name;
-            size_t n1 = block.find("<name>");
-            size_t n2 = block.find("</name>");
-            if (n1 != std::string::npos && n2 != std::string::npos && n2 > n1) {
-                name = block.substr(n1 + 6, n2 - (n1 + 6));
-                name = unescapeXml(name);
-            }
-
-            int score = 0;
-            size_t s1 = block.find("<score>");
-            size_t s2 = block.find("</score>");
-            if (s1 != std::string::npos && s2 != std::string::npos && s2 > s1) {
-                std::string sc = block.substr(s1 + 7, s2 - (s1 + 7));
-                try { score = std::stoi(sc); }
-                catch (...) { score = 0; }
-            }
-
-
-   
-            size_t l1 = block.find("<level>");
-            size_t l2 = block.find("</level>");
-            if (l1 != std::string::npos && l2 != std::string::npos && l2 > l1) {
-                std::string sc = block.substr(l1 + 7, l2 - (l1 + 7));
-                try { level = std::stoi(sc); }
-                catch (...) { level = 0; }
-            }
-
-            int level1 = 0, level2 = 0, level3 = 0, level4 = 0, level5 = 0;
-
-            size_t l3 = block.find("<level1>");
-            size_t l4 = block.find("</level1>");
-            if (l3 != std::string::npos && l4 != std::string::npos && l4 > l3) {
-                std::string sc = block.substr(l3 + 8, l4 - (l3 + 8));
-                try { level1 = std::stoi(sc); }
-                catch (...) { level1 = 0; }
-            }
-
-            size_t l5 = block.find("<level2>");
-            size_t l6 = block.find("</level2>");
-            if (l5 != std::string::npos && l6 != std::string::npos && l6 > l5) {
-                std::string sc = block.substr(l5 + 8, l6 - (l5 + 8));
-                try { level2 = std::stoi(sc); }
-                catch (...) { level2 = 0; }
-            }
-
-            size_t l7 = block.find("<level3>");
-            size_t l8 = block.find("</level3>");
-            if (l7 != std::string::npos && l8 != std::string::npos && l8 > l7) {
-                std::string sc = block.substr(l7 + 8, l8 - (l7 + 8));
-                try { level3 = std::stoi(sc); }
-                catch (...) { level3 = 0; }
-            }
-
-            size_t l9 = block.find("<level4>");
-            size_t l10 = block.find("</level4>");
-            if (l9 != std::string::npos && l10 != std::string::npos && l10 > l9) {
-                std::string sc = block.substr(l9 + 8, l10 - (l9 + 8));
-                try { level4 = std::stoi(sc); }
-                catch (...) { level4 = 0; }
-            }
-
-            size_t l11 = block.find("<level5>");
-            size_t l12 = block.find("</level5>");
-            if (l11 != std::string::npos && l12 != std::string::npos && l12 > l11) {
-                std::string sc = block.substr(l11 + 8, l12 - (l11 + 8));
-                try { level5 = std::stoi(sc); }
-                catch (...) { level5 = 0; }
-            }
-
-
-            if (!name.empty()) {
-                players.agregarFinal(Jugador(name, score,level,level1, level2, level3, level4, level5 ));
-                playersCount++;
-            }
-
-            pos = pend + 9; // después de </player>
-            ordenarJugadoresPorPuntaje();
-        }
-       
-    }
+  
 public:
     Game() : board() {
         // Configuración view
@@ -325,10 +102,10 @@ public:
         }
 
         // Cargar texturas (ajusta rutas)
-        userTexture.loadFromFile("C:\\Joshua\\practica\\Sprites\\paisaje.jpg");
+        userTexture.loadFromFile("C:\\Joshua\\Proyecto Primer Avance\\Assets\\paisaje.jpg");
         backgroundTexture.loadFromFile("C:\\Joshua\\Proyecto Primer Avance\\Assets\\Fruit background.png");
         menuTexture.loadFromFile("C:\\Joshua\\Proyecto Primer Avance\\Assets\\Menu background.png");
-        fondo12.loadFromFile("C:\\Joshua\\practica\\Sprites\\tierra1.png");
+        fondo12.loadFromFile("C:\\Joshua\\Proyecto Primer Avance\\Assets\\tierra1.png");
 
         fondo1.setTexture(fondo12);
         fondo1.setPosition(170.f, 130.f);
@@ -680,9 +457,185 @@ public:
         }
 
     }
+
     ~Game() {
         savePlayersToFile();
     }
+    // Metodos para ingresar un jugador
+        void ordenarJugadoresPorPuntaje() {
+            if (players.getCabeza() == nullptr) return;
+
+            bool swapped;
+            do {
+                swapped = false;
+                Nodo<Jugador>* actual = players.getCabeza();
+
+                while (actual->siguiente != nullptr) {
+                    if (actual->dato.puntaje < actual->siguiente->dato.puntaje) {
+                        std::swap(actual->dato, actual->siguiente->dato);
+                        swapped = true;
+                    }
+                    actual = actual->siguiente;
+                }
+            } while (swapped);
+        }
+
+        // ---------------- Helpers UTF-8 ----------------
+        void eraseLastUtf8Char(std::string & s) {
+            if (s.empty()) return;
+            size_t i = s.size() - 1;
+            while (i > 0 && (static_cast<unsigned char>(s[i]) & 0xC0) == 0x80) --i;
+            s.erase(i);
+        }
+
+
+
+        // ---------------- Guardar / Cargar XML (sin librerías) ----------------
+        void savePlayersToFile() {
+            std::ofstream f(playersFilePath, std::ofstream::out | std::ofstream::trunc);
+            if (!f.is_open()) {
+                std::cerr << "No se pudo abrir " << playersFilePath << " para guardar.\n";
+                return;
+            }
+            f << "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
+            f << "<players>\n";
+
+            Nodo<Jugador>* nodo = players.getCabeza();
+            while (nodo) {
+                std::string nameEsc = nodo->dato.nombre;
+                int score = nodo->dato.puntaje;
+                int level = nodo->dato.nivel;
+                int level1 = nodo->dato.level1;
+                int level2 = nodo->dato.level2;
+                int level3 = nodo->dato.level3;
+                int level4 = nodo->dato.level4;
+                int level5 = nodo->dato.level5;
+                f << "  <player>\n";
+                f << "    <name>" << nameEsc << "</name>\n";
+                f << "    <score>" << score << "</score>\n";
+                f << "    <level>" << level << "</level>\n";
+                f << "    <level1>" << level1 << "</level1>\n";
+                f << "    <level2>" << level2 << "</level2>\n";
+                f << "    <level3>" << level3 << "</level3>\n";
+                f << "    <level4>" << level4 << "</level4>\n";
+                f << "    <level5>" << level5 << "</level5>\n";
+                f << "  </player>\n";
+                nodo = nodo->siguiente;
+            }
+
+            f << "</players>\n";
+
+
+            f.close();
+        }
+       
+        void loadPlayersFromFile() {
+            std::ifstream f(playersFilePath);
+            if (!f.is_open()) {
+                // no existe => comenzamos con lista vacía
+                return;
+            }
+
+            // Leer todo a string
+            std::string content;
+            f.seekg(0, std::ios::end);
+            content.reserve((size_t)f.tellg());
+            f.seekg(0, std::ios::beg);
+            content.assign((std::istreambuf_iterator<char>(f)), std::istreambuf_iterator<char>());
+            f.close();
+
+            players.vaciar();
+            playersCount = 0;
+
+            size_t pos = 0;
+            while (playersCount < maxPlayers) {
+                size_t pstart = content.find("<player", pos);
+                if (pstart == std::string::npos) break;
+                size_t pclose = content.find(">", pstart);
+                if (pclose == std::string::npos) break;
+                size_t pend = content.find("</player>", pclose);
+                if (pend == std::string::npos) break;
+
+                std::string block = content.substr(pclose + 1, pend - (pclose + 1));
+
+                std::string name;
+                size_t n1 = block.find("<name>");
+                size_t n2 = block.find("</name>");
+                if (n1 != std::string::npos && n2 != std::string::npos && n2 > n1) {
+                    name = block.substr(n1 + 6, n2 - (n1 + 6));
+                }
+
+                int score = 0;
+                size_t s1 = block.find("<score>");
+                size_t s2 = block.find("</score>");
+                if (s1 != std::string::npos && s2 != std::string::npos && s2 > s1) {
+                    std::string sc = block.substr(s1 + 7, s2 - (s1 + 7));
+                    try { score = std::stoi(sc); }
+                    catch (...) { score = 0; }
+                }
+
+
+
+                size_t l1 = block.find("<level>");
+                size_t l2 = block.find("</level>");
+                if (l1 != std::string::npos && l2 != std::string::npos && l2 > l1) {
+                    std::string sc = block.substr(l1 + 7, l2 - (l1 + 7));
+                    try { level = std::stoi(sc); }
+                    catch (...) { level = 0; }
+                }
+
+                int level1 = 0, level2 = 0, level3 = 0, level4 = 0, level5 = 0;
+
+                size_t l3 = block.find("<level1>");
+                size_t l4 = block.find("</level1>");
+                if (l3 != std::string::npos && l4 != std::string::npos && l4 > l3) {
+                    std::string sc = block.substr(l3 + 8, l4 - (l3 + 8));
+                    try { level1 = std::stoi(sc); }
+                    catch (...) { level1 = 0; }
+                }
+
+                size_t l5 = block.find("<level2>");
+                size_t l6 = block.find("</level2>");
+                if (l5 != std::string::npos && l6 != std::string::npos && l6 > l5) {
+                    std::string sc = block.substr(l5 + 8, l6 - (l5 + 8));
+                    try { level2 = std::stoi(sc); }
+                    catch (...) { level2 = 0; }
+                }
+
+                size_t l7 = block.find("<level3>");
+                size_t l8 = block.find("</level3>");
+                if (l7 != std::string::npos && l8 != std::string::npos && l8 > l7) {
+                    std::string sc = block.substr(l7 + 8, l8 - (l7 + 8));
+                    try { level3 = std::stoi(sc); }
+                    catch (...) { level3 = 0; }
+                }
+
+                size_t l9 = block.find("<level4>");
+                size_t l10 = block.find("</level4>");
+                if (l9 != std::string::npos && l10 != std::string::npos && l10 > l9) {
+                    std::string sc = block.substr(l9 + 8, l10 - (l9 + 8));
+                    try { level4 = std::stoi(sc); }
+                    catch (...) { level4 = 0; }
+                }
+
+                size_t l11 = block.find("<level5>");
+                size_t l12 = block.find("</level5>");
+                if (l11 != std::string::npos && l12 != std::string::npos && l12 > l11) {
+                    std::string sc = block.substr(l11 + 8, l12 - (l11 + 8));
+                    try { level5 = std::stoi(sc); }
+                    catch (...) { level5 = 0; }
+                }
+
+
+                if (!name.empty()) {
+                    players.agregarFinal(Jugador(name, score, level, level1, level2, level3, level4, level5));
+                    playersCount++;
+                }
+
+                pos = pend + 9; // después de </player>
+                ordenarJugadoresPorPuntaje();
+            }
+        }
     // ---------------- Process events ----------------
     void processEvents() {
         sf::Event event;
@@ -733,7 +686,7 @@ public:
                 if (event.key.code == sf::Keyboard::BackSpace) {
                     eraseLastUtf8Char(nombre);
                 }
-                else if (event.key.code == sf::Keyboard::Return) {
+                if (event.key.code == sf::Keyboard::Return) {
                     // finalizar edición y guardar en la lista
                     isTyping = false;
                     if (!nombre.empty()) {
@@ -746,10 +699,7 @@ public:
                             savePlayersToFile();
                         }
                     }
-                }
-                else if (event.key.code == sf::Keyboard::Escape) {
-                    isTyping = false;
-                }
+                }            
             }
 
             // Mouse handling
@@ -767,15 +717,6 @@ public:
                     else {
                         if (isTyping) isTyping = false;
                     }
-
-                    // Parámetros de layout — usar las mismas posiciones que en render()
-                    float playersX = 180.f;
-                    float playersY = 210.f;
-                    float playerW = 280.f, playerH = 36.f;
-                    float buttonW = 50.f, buttonH = 35.f;
-                    float gapY = 10.f;
-                    float btn1X = playersX + playerW + 8.f;    // botón MENU (azul)
-                    float btn2X = playersX + playerW + 65.f;   // botón Eliminar (rojo)
 
                     Nodo<Jugador>* nodo = players.getCabeza();
                     for (size_t i = 0; i < playersCount && nodo != nullptr; ++i, nodo = nodo->siguiente) {
@@ -1202,15 +1143,6 @@ public:
             text.setString(display);
             window.draw(text);
 
-            // DIBUJAR LISTA DE JUGADORES
-            float playersX = 180.f;
-            float playersY = 210.f;
-            float playerW = 280.f, playerH = 36.f;
-            float buttonW = 50.f, buttonH = 35.f;
-            float gapY = 10.f;
-            float btn1X = playersX + playerW + 8.f;
-            float btn2X = playersX + playerW + 65.f;
-
             sf::Text playerNameText;
             playerNameText.setFont(font);
             playerNameText.setCharacterSize(20);
@@ -1541,6 +1473,3 @@ public:
         }
     }
 };
-
-#endif // GAME_H
-

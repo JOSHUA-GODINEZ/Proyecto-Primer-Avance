@@ -1,37 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <players>
   <player>
-    <name>jopshua</name>
-    <score>680</score>
-    <level>5</level>
-    <level1>240</level1>
-    <level2>150</level2>
-    <level3>140</level3>
-    <level4>150</level4>
-    <level5>0</level5>
-  </player>
-  <player>
-    <name>sdassd</name>
-    <score>470</score>
-    <level>3</level>
-    <level1>90</level1>
-    <level2>380</level2>
-    <level3>0</level3>
-    <level4>0</level4>
-    <level5>0</level5>
-  </player>
-  <player>
-    <name>fds</name>
-    <score>210</score>
-    <level>3</level>
-    <level1>90</level1>
-    <level2>120</level2>
-    <level3>0</level3>
-    <level4>0</level4>
-    <level5>0</level5>
-  </player>
-  <player>
-    <name>sads</name>
+    <name>Joshua</name>
     <score>0</score>
     <level>1</level>
     <level1>0</level1>

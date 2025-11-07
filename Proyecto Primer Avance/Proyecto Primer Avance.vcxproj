@@ -135,10 +135,8 @@
     <ClInclude Include="Board.h" />
     <ClInclude Include="Game.h" />
     <ClInclude Include="Fruit.h" />
+    <ClInclude Include="Jugador.h" />
     <ClInclude Include="Lista.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <Text Include="Código nuevo y cambiado.txt" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
