@@ -770,9 +770,7 @@ public:
         if (selectedRow == -1) {
             BombFruit* asBomb = dynamic_cast<BombFruit*>(matrix[row][col]);
             if (asBomb != nullptr) {
-
-                matrix[row][col]->startPop(500.f, MARK_SCALE);
-
+  
                 removalPending = true;
                 startCleaning(true);
 
@@ -798,7 +796,7 @@ public:
             return;
         }
 
-        if (matrix[selectedRow][selectedCol]) matrix[selectedRow][selectedCol]->resetVisual();
+       // if (matrix[selectedRow][selectedCol]) matrix[selectedRow][selectedCol]->resetVisual();
 
         swapCells(selectedRow, selectedCol, row, col);
         selectedRow = -1; selectedCol = -1;
@@ -818,7 +816,6 @@ public:
             marked[r][c] = comboMarked[r][c] = forcedBreak[r][c] = false;
         }
         remainingMoves = 3;
-      //  level = getLevel();
         score=0;
         super = 0;
         cleaningInProgress = false;

@@ -242,8 +242,6 @@ public:
         blev5T.setString("Jugar");
         blev5T.setPosition(475.f, 355.f);
 
-
-
         // Labels de la lista
         nombreU.setFont(font);
         nombreU.setCharacterSize(24);
@@ -1188,7 +1186,7 @@ public:
                 btnText.setCharacterSize(14);
                 btnText.setFillColor(sf::Color::Black);
                 btnText.setString("MENU");
-                float bx = btn1X+2 + (buttonW - btnText.getLocalBounds().width) / 2.f - 4.f;
+                float bx = btn1X+3 + (buttonW - btnText.getLocalBounds().width) / 2.f - 4.f;
                 float by = y + (buttonH - btnText.getCharacterSize()) / 2.f - 2.f;
                 btnText.setPosition(bx, by);
                 window.draw(btnText);
